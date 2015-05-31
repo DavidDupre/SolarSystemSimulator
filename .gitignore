@@ -43,9 +43,8 @@ Temporary Items
 .apdisk
 
 # Binary files
-.class
-.settings
-.classpath
-.project
-.txt
-
+*.class
+*.settings
+*.classpath
+*.project
+*.dll

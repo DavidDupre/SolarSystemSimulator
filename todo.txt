@@ -1,0 +1,22 @@
+Optimizations:
+	- use KeplerCOE
+	- buffer orbits for static orbits (but do it so it's pretty)
+	- Canonical units
+	
+Features:
+	- store TLEs using sat id
+		- allows for duplicate names
+	- GUI
+		- Edit date
+		- Control simulation speed
+		- Navigate using tree-structure
+		- Navigate using search
+		- Turn orbits on or off
+		- Create flight plans
+	- Dynamic parents for ships
+	- Library of maneuvers
+	- Record delta-v expenditures. Sum for flight plans
+	
+Bugs:
+	- Neptune escaped satellite
+	- Shakes at large distances

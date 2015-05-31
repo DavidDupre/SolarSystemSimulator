@@ -64,9 +64,9 @@ public class Orbit {
 		this.peri = peri;
 		this.v = v;
 	}
-	
-	public Orbit(double a, double e, double i, double node,
-			double peri, double v) {
+
+	public Orbit(double a, double e, double i, double node, double peri,
+			double v) {
 		this.p = Astrophysics.getSemiParameter(a, e);
 		this.a = a;
 		this.e = e;
@@ -86,7 +86,12 @@ public class Orbit {
 	public Orbit(double a) {
 		this(a, a, 0, 0, 0, 0, 0);
 	}
-	
+
+	public Orbit clone() {
+		return new Orbit(this.p, this.a, this.e, this.i, this.node, this.peri,
+				this.v);
+	}
+
 	public void toRadians() {
 		i = Math.toRadians(i);
 		node = Math.toRadians(node);

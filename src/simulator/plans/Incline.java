@@ -34,8 +34,7 @@ public class Incline extends Maneuver {
 
 		/*
 		 * Determine true anomaly of ascending / descending nodes. TODO
-		 * determine which node comes first TODO determine which node is less
-		 * expensive
+		 * determine which node is less expensive
 		 */
 		double vAscend;
 		double vDescend;
@@ -47,20 +46,21 @@ public class Incline extends Maneuver {
 			vAscend = vDescend + Math.PI;
 		}
 		double vNext;
-		if(vAscend - orb.v < 0) {
+		if (vAscend - orb.v < 0) {
 			vNext = vDescend;
 		} else {
 			vNext = vAscend;
 		}
-		
+
+		double initSum = orb.peri + orb.v;
+
 		/*
-		 * Perform binary search to find time to next ascending node
+		 * Perform binary search to find time to next node
 		 */
 		double period = 2.0 * Math.PI
 				* Math.sqrt((orb.a * orb.a * orb.a) / grav);
 		double low = 0;
-		double high = period; // use period / 2 when finding next node in
-								// general
+		double high = period;
 		double mid = (low + high) / 2.0;
 		double tolerance = Math.toRadians(1.0);
 		double anomDif = tolerance * 10.0;
@@ -70,11 +70,12 @@ public class Incline extends Maneuver {
 					ship.parent.mu, mid);
 			Orbit futureOrb = Astrophysics.toOrbitalElements(futureState[0],
 					futureState[1], ship.parent.mu);
+			double sum = futureOrb.peri + futureOrb.v;
 			anomDif = futureOrb.v - vNext;
-			if (anomDif < 0) {
-				low = mid;
-			} else {
+			if (anomDif > 0 || sum < initSum) {
 				high = mid;
+			} else {
+				low = mid;
 			}
 			mid = (low + high) / 2.0;
 			iterations++;
@@ -90,10 +91,9 @@ public class Incline extends Maneuver {
 
 		/* Calculate flight path angle fpa */
 		Vector3D h = Vector3D.crossProduct(ship.pos, ship.vel);
-		double fpa = Math.acos(h.magnitude() / (r * v));
+		double cos_fpa = h.magnitude() / (r * v);
 
-		// TODO cos(acos()) is dumb
-		deltaV = Math.abs(2.0 * v * Math.cos(fpa) * Math.sin(deltaI / 2.0));
+		deltaV = Math.abs(2.0 * v * cos_fpa * Math.sin(deltaI / 2.0));
 
 		/*
 		 * Create the burn TODO use actual epoch instead of lastUpdatedTime

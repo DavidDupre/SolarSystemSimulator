@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import simulator.plans.Hohmann;
 import simulator.plans.Incline;
+import simulator.plans.WaitCommand;
 import simulator.screen.Screen;
 import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
@@ -52,8 +53,9 @@ public class Simulation {
 		setFocus(solarSystem.getObject("ISS (ZARYA)"));
 		solarSystem.start();
 		Ship iss = ((Ship) solarSystem.getObject("ISS (ZARYA)"));
-		iss.addManeuver(new Incline(0));
+		iss.addManeuver(new WaitCommand(2E3));
 		iss.addManeuver(new Hohmann(1E7));
+		iss.addManeuver(new Incline(0));
 
 		Screen screen = new Screen(this);
 		screen.setRenderer(solarSystem.getRenderer());

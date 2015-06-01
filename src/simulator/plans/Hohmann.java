@@ -17,19 +17,20 @@ public class Hohmann extends Maneuver {
 
 	private static double NULL_DOUBLE = -420.0;
 
-	/**
-	 * Raise the orbit to the desired radius, rFinal, using two tangent burns
-	 * TODO add version where it waits until peripasis to minimize delta-v
-	 * 
-	 * @param executeEpoch
-	 * @param rFinal
-	 */
 	public Hohmann(double executeEpoch, double rFinal) {
 		this.executeEpoch = executeEpoch;
 		this.rFinal = rFinal;
 		burns = new ArrayList<Burn>();
 	}
 
+	/**
+	 * Raise or lower the orbit to the desired radius, rFinal, using two tangent
+	 * burns. Note that the orbit should be circular to begin with, as this is a
+	 * circular implementation of Hohmann
+	 * 
+	 * @param rFinal
+	 *            the target radius
+	 */
 	public Hohmann(double rFinal) {
 		executeEpoch = NULL_DOUBLE;
 		this.rFinal = rFinal;

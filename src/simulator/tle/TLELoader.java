@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -17,7 +20,7 @@ import simulator.Simulation;
 public class TLELoader {
 	private HashMap<String, TLE> tles;
 	private HashMap<String, HashMap<String, TLE>> loadedCategories;
-	private String[] categories;
+	public String[] categories;
 
 	public TLELoader() {
 		tles = new HashMap<String, TLE>();
@@ -85,15 +88,46 @@ public class TLELoader {
 		}
 	}
 
+	/**
+	 * Archive a category into </res/tle/category.txt>. Allows offline ussage.
+	 * 
+	 * @param category
+	 */
+	public void archiveCategory(String category) {
+		try {
+			/* Get URL */
+			URL url = new URL("http://www.celestrak.com/NORAD/elements/"
+					+ category + ".txt");
+
+			/* Create new file */
+			File jarFile = new File(getClass().getProtectionDomain()
+					.getCodeSource().getLocation().toURI().getPath());
+			String root = jarFile.getParent();
+			String tlePath = (root + "/res/tle/" + category + ".txt");
+			Path archivePath = new File(tlePath).toPath();
+
+			/* Copy the file from celestrak */
+			Files.copy(url.openStream(), archivePath,
+					StandardCopyOption.REPLACE_EXISTING);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void load(String category) {
 		if (!loadedCategories.containsKey(category) && isReal(category)) {
 			Scanner s;
 			InputStream is = null;
-			
-			if(Simulation.USE_INTERNET) {
+
+			if (Simulation.USE_INTERNET) {
 				try {
-					URL url = new URL("http://www.celestrak.com/NORAD/elements/"
-							+ category + ".txt");
+					URL url = new URL(
+							"http://www.celestrak.com/NORAD/elements/"
+									+ category + ".txt");
 					is = url.openStream();
 				} catch (MalformedURLException e) {
 					// TODO Auto-generated catch block
@@ -104,7 +138,8 @@ public class TLELoader {
 				}
 			} else {
 				try {
-					File jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+					File jarFile = new File(getClass().getProtectionDomain()
+							.getCodeSource().getLocation().toURI().getPath());
 					String root = jarFile.getParent();
 					String tlePath = (root + "/res/tle/" + category + ".txt");
 					is = new FileInputStream(tlePath);
@@ -116,7 +151,7 @@ public class TLELoader {
 					e.printStackTrace();
 				}
 			}
-			
+
 			s = new Scanner(is);
 			HashMap<String, TLE> newTles = new HashMap<String, TLE>();
 

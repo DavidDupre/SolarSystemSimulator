@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.util.concurrent.locks.ReentrantLock;
 
+import simulator.plans.Bielliptic;
+import simulator.plans.Circularize;
 import simulator.plans.Hohmann;
 import simulator.plans.Incline;
 import simulator.plans.WaitCommand;
@@ -17,7 +19,7 @@ public class Simulation {
 	/*
 	 * Simulation seconds per real seconds
 	 */
-	public static final double SIM_SPEED = 1E3;
+	public static final double SIM_SPEED = 5E3;
 	public static final boolean USE_INTERNET = false;
 
 	/**
@@ -54,8 +56,9 @@ public class Simulation {
 		solarSystem.start();
 		Ship iss = ((Ship) solarSystem.getObject("ISS (ZARYA)"));
 		iss.addManeuver(new WaitCommand(2E3));
-		iss.addManeuver(new Hohmann(1E7));
-		iss.addManeuver(new Incline(0));
+		iss.addManeuver(new Circularize());
+		//iss.addManeuver(new Hohmann(1E7));
+		iss.addManeuver(new Bielliptic(3E7, 1E7));
 
 		Screen screen = new Screen(this);
 		screen.setRenderer(solarSystem.getRenderer());

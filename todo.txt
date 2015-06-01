@@ -4,8 +4,11 @@ Optimizations:
 	- Canonical units
 	
 Features:
-	- store TLEs using sat id
-		- allows for duplicate names
+	- Two-line elements
+		- store TLEs using sat id
+			- allows for duplicate names
+		- load TLEs individually or by category using a GUI
+		- Archive / update local TLE files
 	- GUI
 		- Edit date
 		- Control simulation speed
@@ -13,10 +16,13 @@ Features:
 		- Navigate using search
 		- Turn orbits on or off
 		- Create flight plans
-	- Dynamic parents for ships
+			- show projected orbit
+	- Dynamic parents for ships (patched conics)
 	- Library of maneuvers
 	- Record delta-v expenditures. Sum for flight plans
 	
 Bugs:
 	- Neptune escaped satellite
 	- Shakes at large distances
+	- Hohmann transfers into eccentric orbit
+		- Because it start eccentric

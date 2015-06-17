@@ -65,7 +65,7 @@ public class SolarSystem extends Thread {
 				updateEpoch();
 				o.updateTo(epochTAI);
 			}
-			System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
+			//System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
 		}
 	}
 	

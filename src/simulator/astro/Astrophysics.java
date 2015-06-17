@@ -467,12 +467,12 @@ public class Astrophysics {
 	 *            - the current orbit
 	 * @param mu
 	 *            - the gravitational constant for the parent body
-	 * @param v
+	 * @param targetV
 	 *            - target true anomaly, in radians
 	 * @return the time, in seconds, to that true anomaly
 	 */
 	public static double timeToAnomaly(Vector3D pos, Vector3D vel, Orbit orb,
-			double mu, double v) {
+			double mu, double targetV) {
 		double initSum = orb.peri + orb.v;
 
 		/*
@@ -483,7 +483,7 @@ public class Astrophysics {
 		double low = 0;
 		double high = period;
 		double mid = (low + high) / 2.0;
-		double tolerance = Math.toRadians(1.0);
+		double tolerance = Math.toRadians(.001);
 		double anomDif = tolerance * 10.0;
 		int iterations = 0;
 		while (Math.abs(anomDif) > tolerance && iterations < 20) {
@@ -491,7 +491,7 @@ public class Astrophysics {
 			Orbit futureOrb = Astrophysics.toOrbitalElements(futureState[0],
 					futureState[1], mu);
 			double sum = futureOrb.peri + futureOrb.v;
-			anomDif = futureOrb.v - v;
+			anomDif = futureOrb.v - targetV;
 			if (anomDif > 0 || sum < initSum) {
 				high = mid;
 			} else {
@@ -500,6 +500,7 @@ public class Astrophysics {
 			mid = (low + high) / 2.0;
 			iterations++;
 		}
+		System.out.println(iterations);
 		double timeToNode = mid;
 		return timeToNode;
 	}

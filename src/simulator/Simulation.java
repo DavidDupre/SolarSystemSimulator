@@ -3,18 +3,16 @@ package simulator;
 import java.io.File;
 import java.net.URISyntaxException;
 
-import simulator.plans.Incline;
-import simulator.plans.WaitCommand;
+import simulator.plans.Hohmann;
 import simulator.screen.Screen;
 import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
-import simulator.tle.TLELoader;
 
 public class Simulation {
 	/*
 	 * Simulation seconds per real seconds
 	 */
-	public static final double SIM_SPEED = 1E3;
+	public static final double SIM_SPEED = 2E3;
 	public static final boolean USE_INTERNET = false;
 
 	/**
@@ -52,8 +50,7 @@ public class Simulation {
 		solarSystem.start();
 		
 		Ship iss = (Ship) solarSystem.getObject("ISS (ZARYA)");
-		iss.addManeuver(new WaitCommand(3000));
-		iss.addManeuver(new Incline(0));
+		iss.addManeuver(new Hohmann(1E7));
 		/*
 		iss.addManeuver(new Circularize());
 		iss.addManeuver(new WaitCommand(3000));

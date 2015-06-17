@@ -2,6 +2,8 @@ package simulator.plans;
 
 import java.util.ArrayList;
 
+import simulator.astro.Astrophysics;
+import simulator.astro.Orbit;
 import simulator.astro.Vector3D;
 import simulator.plans.Burn.Command;
 
@@ -15,40 +17,44 @@ public class Hohmann extends Maneuver {
 	private double executeEpoch;
 	private double rFinal;
 
-	private static double NULL_DOUBLE = -420.0;
-
-	public Hohmann(double executeEpoch, double rFinal) {
-		this.executeEpoch = executeEpoch;
-		this.rFinal = rFinal;
-		burns = new ArrayList<Burn>();
-	}
-
 	/**
 	 * Raise or lower the orbit to the desired radius, rFinal, using two tangent
-	 * burns. Note that the orbit should be circular to begin with, as this is a
-	 * circular implementation of Hohmann
+	 * burns.
 	 * 
 	 * @param rFinal
 	 *            the target radius
 	 */
 	public Hohmann(double rFinal) {
-		executeEpoch = NULL_DOUBLE;
 		this.rFinal = rFinal;
 		burns = new ArrayList<Burn>();
 	}
 
 	public void init() {
-		if (executeEpoch == NULL_DOUBLE) {
-			executeEpoch = ship.lastUpdatedTime;
+		double grav = ship.parent.mu;
+
+		Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel, grav);
+		double rPeri = orb.a * (1.0 - orb.e);
+		double rApo = orb.a * (1.0 + orb.e);
+		double rInitial = 0;
+		if (rFinal > rApo) {
+			rInitial = rPeri;
+			executeEpoch = ship.lastUpdatedTime
+					+ Astrophysics.timeToAnomaly(ship.pos, ship.vel, orb, grav,
+							2.0 * Math.PI);
+		} else {
+			rInitial = rApo;
+			executeEpoch = ship.lastUpdatedTime
+					+ Astrophysics.timeToAnomaly(ship.pos, ship.vel, orb, grav,
+							Math.PI);
 		}
 
-		double grav = ship.parent.mu;
-		double rInitial = ship.pos.magnitude();
-
 		double aTrans = (rInitial + rFinal) / 2.0;
+		double aInitial = (rApo + rPeri) / 2.0;
 
-		double vInitial = Math.sqrt(grav / rInitial);
-		double vFinal = Math.sqrt(grav / rFinal);
+		double vInitial = Math.sqrt(((2.0 * grav) / rInitial)
+				- (grav / aInitial));
+		double vFinal = Math.sqrt(grav / rFinal); // TODO use aFinal for
+													// elliptical final orbits
 		double vTransA = Math.sqrt(((2.0 * grav) / rInitial) - (grav / aTrans));
 		double vTransB = Math.sqrt(((2.0 * grav) / rFinal) - (grav / aTrans));
 

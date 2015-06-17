@@ -18,13 +18,13 @@ import java.util.Scanner;
 import simulator.Simulation;
 
 public class TLELoader {
-	private HashMap<String, TLE> tles;
-	private HashMap<String, HashMap<String, TLE>> loadedCategories;
-	public String[] categories;
+	private HashMap<Integer, TLE> tles;
+	private HashMap<String, HashMap<Integer, TLE>> loadedCategories;
+	public static String[] categories;
 
 	public TLELoader() {
-		tles = new HashMap<String, TLE>();
-		loadedCategories = new HashMap<String, HashMap<String, TLE>>();
+		tles = new HashMap<Integer, TLE>();
+		loadedCategories = new HashMap<String, HashMap<Integer, TLE>>();
 		categories = new String[] { "amateur", "argos", "beidou", "cubesat",
 				"dmc", "education", "engineering", "galileo", "geo", "glo-ops",
 				"globalstar", "goes", "gorizont", "gps-ops", "intelsat",
@@ -35,7 +35,7 @@ public class TLELoader {
 				"iridium-33-debris" };
 	}
 
-	private boolean isReal(String category) {
+	private boolean isCategory(String category) {
 		for (int i = 0; i < categories.length; i++) {
 			if (categories[i].equals(categories[i])) {
 				return true;
@@ -44,30 +44,41 @@ public class TLELoader {
 		return false;
 	}
 
-	public TLE getTLE(String name) {
-		if (tles.containsKey(name)) {
-			return tles.get(name);
-		} else {
+	private TLE getTLE(String name) {
+		return getTLE(name, false);
+	}
+	
+	private TLE getTLE(String name, boolean tryhard) {
+		for (TLE tle : tles.values()) {
+			if (tle.name.equals(name)) {
+				return tle;
+			}
+		}
+		if(tryhard) {
 			for (int i = 0; i < categories.length; i++) {
 				if (!loadedCategories.containsKey(categories[i])) {
 					load(categories[i]);
-					if (tles.containsKey(name)) {
-						return tles.get(name);
+					for (TLE tle : loadedCategories.get(categories[i]).values()) {
+						if (tle.name.equals(name)) {
+							return tle;
+						}
 					}
 				}
 			}
-			System.out.println(name + " not found!");
-			return null;
 		}
+		return null;
 	}
 
 	public TLE getTLE(String category, String name) {
-		if (tles.containsKey(name)) {
-			return tles.get(name);
-		} else if (isReal(category)) {
+		TLE firstGuess = getTLE(name);
+		if (firstGuess != null) {
+			return firstGuess;
+		} else if (isCategory(category)) {
 			load(category);
-			if (tles.containsKey(name)) {
-				return tles.get(name);
+			for (TLE tle : loadedCategories.get(category).values()) {
+				if (tle.name.equals(name)) {
+					return tle;
+				}
 			}
 			System.out.println(name + " not found!");
 			return null;
@@ -77,7 +88,7 @@ public class TLELoader {
 	}
 
 	public ArrayList<TLE> getCategory(String category) {
-		if (isReal(category)) {
+		if (isCategory(category)) {
 			if (!loadedCategories.containsKey(category)) {
 				load(category);
 			}
@@ -89,7 +100,7 @@ public class TLELoader {
 	}
 
 	/**
-	 * Archive a category into </res/tle/category.txt>. Allows offline ussage.
+	 * Archive a category into </res/tle/category.txt>. Allows offline usage.
 	 * 
 	 * @param category
 	 */
@@ -119,7 +130,7 @@ public class TLELoader {
 	}
 
 	public void load(String category) {
-		if (!loadedCategories.containsKey(category) && isReal(category)) {
+		if (!loadedCategories.containsKey(category) && isCategory(category)) {
 			Scanner s;
 			InputStream is = null;
 
@@ -153,7 +164,7 @@ public class TLELoader {
 			}
 
 			s = new Scanner(is);
-			HashMap<String, TLE> newTles = new HashMap<String, TLE>();
+			HashMap<Integer, TLE> newTles = new HashMap<Integer, TLE>();
 
 			while (s.hasNextLine()) {
 				for (int i = 0; i < 3; i++) {
@@ -165,8 +176,8 @@ public class TLELoader {
 					String line1 = s.nextLine();
 					String line2 = s.nextLine();
 					TLE newTLE = new TLE(name, line1, line2);
-					tles.put(name, newTLE);
-					newTles.put(name, newTLE);
+					tles.put(newTLE.id, newTLE);
+					newTles.put(newTLE.id, newTLE);
 				}
 			}
 			s.close();

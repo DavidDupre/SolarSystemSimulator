@@ -2,24 +2,19 @@ package simulator;
 
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.concurrent.locks.ReentrantLock;
 
-import simulator.plans.Bielliptic;
-import simulator.plans.Circularize;
-import simulator.plans.Hohmann;
 import simulator.plans.Incline;
 import simulator.plans.WaitCommand;
 import simulator.screen.Screen;
 import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
+import simulator.tle.TLELoader;
 
 public class Simulation {
-	public static ReentrantLock physicsLock;
-
 	/*
 	 * Simulation seconds per real seconds
 	 */
-	public static final double SIM_SPEED = 5E3;
+	public static final double SIM_SPEED = 1E3;
 	public static final boolean USE_INTERNET = false;
 
 	/**
@@ -32,15 +27,11 @@ public class Simulation {
 
 	public SolarSystem solarSystem;
 
-	public Simulation() {
-		physicsLock = new ReentrantLock();
-	}
-
 	public void start() {
 		solarSystem = new SolarSystem(this);
 		SystemLoader loader = new SystemLoader();
 
-		String filePath = "/res/test.csv";
+		String filePath = "/res/solarSystem.csv";
 		try {
 			File jarFile = new File(getClass().getProtectionDomain()
 					.getCodeSource().getLocation().toURI().getPath());
@@ -52,13 +43,24 @@ public class Simulation {
 
 		solarSystem.addObjects(loader.getObjects(filePath));
 		solarSystem.addObjects(loader.getShips("iss"));
+		/*
+		for(int i=0; i<TLELoader.categories.length; i++) {
+			solarSystem.addObjects(loader.getShips(TLELoader.categories[i]));
+		}
+		*/
 		setFocus(solarSystem.getObject("ISS (ZARYA)"));
 		solarSystem.start();
-		Ship iss = ((Ship) solarSystem.getObject("ISS (ZARYA)"));
-		iss.addManeuver(new WaitCommand(2E3));
+		
+		Ship iss = (Ship) solarSystem.getObject("ISS (ZARYA)");
+		iss.addManeuver(new WaitCommand(3000));
+		iss.addManeuver(new Incline(0));
+		/*
 		iss.addManeuver(new Circularize());
-		//iss.addManeuver(new Hohmann(1E7));
-		iss.addManeuver(new Bielliptic(3E7, 1E7));
+		iss.addManeuver(new WaitCommand(3000));
+		iss.addManeuver(new Incline(0));
+		iss.addManeuver(new WaitCommand(11000));
+		iss.addManeuver(new Bielliptic(4E8, 1E7));
+		*/
 
 		Screen screen = new Screen(this);
 		screen.setRenderer(solarSystem.getRenderer());

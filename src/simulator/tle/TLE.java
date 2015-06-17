@@ -11,12 +11,14 @@ public class TLE {
 	public String name;
 	private String line1;
 	private String line2;
+	public int id;
 
 	public TLE(String name, String line1, String line2) {
 		// TODO use String.trim on name?
 		this.name = name;
 		this.line1 = line1;
 		this.line2 = line2;
+		id = Integer.parseInt(line1.substring(2, 7));
 	}
 
 	/**

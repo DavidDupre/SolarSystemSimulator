@@ -239,17 +239,17 @@ public class Astrophysics {
 			// Parabola
 			Vector3D h = Vector3D.crossProduct(r_0, v_0);
 			double p = h.mag2() / mu;
-			double s = Math.atan2(1.0, 3*Math.sqrt(mu/(p*p*p))*deltaT)/2.0;
-			double w = Math.atan(Math.pow(Math.tan(s),1.0/3.0));
-			x_0 = (Math.sqrt(p)*2.0)/Math.tan(2.0*w);
+			double s = Math
+					.atan2(1.0, 3 * Math.sqrt(mu / (p * p * p)) * deltaT) / 2.0;
+			double w = Math.atan(Math.pow(Math.tan(s), 1.0 / 3.0));
+			x_0 = (Math.sqrt(p) * 2.0) / Math.tan(2.0 * w);
 		} else {
 			// Hyperbola
 			double a = 1.0 / alpha;
 			x_0 = Math.signum(deltaT)
 					* Math.sqrt(-a)
 					* Math.log((-2.0 * mu * alpha * deltaT)
-							/ (rDotV + Math.signum(deltaT)
-									* Math.sqrt(-mu * a)
+							/ (rDotV + Math.signum(deltaT) * Math.sqrt(-mu * a)
 									* (1.0 - r_0mag * alpha)));
 		}
 
@@ -456,5 +456,51 @@ public class Astrophysics {
 		}
 
 		return H_n;
+	}
+
+	/**
+	 * Calculate the time to the next time the body with pass through the
+	 * specified true anomaly
+	 * 
+	 * 
+	 * @param orb
+	 *            - the current orbit
+	 * @param mu
+	 *            - the gravitational constant for the parent body
+	 * @param v
+	 *            - target true anomaly, in radians
+	 * @return the time, in seconds, to that true anomaly
+	 */
+	public static double timeToAnomaly(Vector3D pos, Vector3D vel, Orbit orb,
+			double mu, double v) {
+		double initSum = orb.peri + orb.v;
+
+		/*
+		 * Perform binary search to find time to next node
+		 */
+		double period = 2.0 * Math.PI
+				* Math.sqrt((orb.a * orb.a * orb.a) / mu);
+		double low = 0;
+		double high = period;
+		double mid = (low + high) / 2.0;
+		double tolerance = Math.toRadians(1.0);
+		double anomDif = tolerance * 10.0;
+		int iterations = 0;
+		while (Math.abs(anomDif) > tolerance && iterations < 20) {
+			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
+			Orbit futureOrb = Astrophysics.toOrbitalElements(futureState[0],
+					futureState[1], mu);
+			double sum = futureOrb.peri + futureOrb.v;
+			anomDif = futureOrb.v - v;
+			if (anomDif > 0 || sum < initSum) {
+				high = mid;
+			} else {
+				low = mid;
+			}
+			mid = (low + high) / 2.0;
+			iterations++;
+		}
+		double timeToNode = mid;
+		return timeToNode;
 	}
 }

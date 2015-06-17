@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import simulator.screen.Renderer;
 import simulator.simObject.Body;
+import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 import simulator.simObject.SimObject.RenderDetail;
 
@@ -22,7 +23,7 @@ public class SolarSystem extends Thread {
 	private long lastTime;
 	private double simStartTimeTAI;
 	private double epochTAI;
-
+	
 	public SolarSystem(Simulation sim) {
 		renderer = new SolarSystemRenderer();
 		objects = new ArrayList<SimObject>();
@@ -44,34 +45,34 @@ public class SolarSystem extends Thread {
 		lastTime = System.currentTimeMillis();
 		epochTAI = simStartTimeTAI;
 		while (true) {
-			double delta = getDeltaTime() / 1000.0;
-			if (delta != 0) {
-				/* Update the epoch */
-				delta *= Simulation.SIM_SPEED;
-				epochTAI += delta;
-
-				/*
-				 * Add objects to the update list based on focus body. Children
-				 * and siblings are updated
-				 */
-				ArrayList<SimObject> updateObjects = new ArrayList<SimObject>();
-				if (sim.getFocus().parent != null) {
-					updateObjects.addAll(sim.getFocus().parent.getChildren());
-				}
-				updateObjects.addAll(sim.getFocus().getChildren());
-
-				/* Update the simObjects */
-				for (SimObject o : updateObjects) {
-					if (o.equals(sim.getFocus())) {
-						Simulation.physicsLock.lock();
-						o.updateTo(epochTAI);
-						Simulation.physicsLock.unlock();
-					} else {
-						o.updateTo(epochTAI);
-					}
-				}
+			/*
+			 * Add objects to the render update list. Children of all direct
+			 * ancestors are added. Children are also added.
+			 */
+			ArrayList<SimObject> updateObjects = new ArrayList<SimObject>();
+			updateObjects.addAll(sim.getFocus().getChildren());
+			updateObjects.add(sim.getFocus());
+			Body parent = sim.getFocus().parent;
+			while (parent != null) {
+				updateObjects.addAll(parent.getChildren());
+				updateObjects.add(parent);
+				parent = parent.parent;
 			}
+
+			/* Update the simObjects */
+			double lastEpoch = epochTAI;
+			for (SimObject o : updateObjects) {
+				updateEpoch();
+				o.updateTo(epochTAI);
+			}
+			System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
 		}
+	}
+	
+	private void updateEpoch() {
+		double delta = getDeltaTime() / 1000.0;
+		delta *= Simulation.SIM_SPEED;
+		epochTAI += delta;
 	}
 
 	private double getDeltaTime() {
@@ -90,7 +91,9 @@ public class SolarSystem extends Thread {
 	}
 
 	public void addObjects(ArrayList<SimObject> objects) {
-		this.objects.addAll(objects);
+		if(objects != null) {
+			this.objects.addAll(objects);
+		}
 	}
 
 	public SimObject getObject(String name) {
@@ -125,7 +128,11 @@ public class SolarSystem extends Thread {
 			}
 
 			for (SimObject o : updateObjects) {
-				o.render(RenderDetail.MAX);
+				if (o instanceof Ship) {
+					o.render(RenderDetail.MAX);
+				} else {
+					o.render(RenderDetail.MAX);
+				}
 			}
 		}
 	}

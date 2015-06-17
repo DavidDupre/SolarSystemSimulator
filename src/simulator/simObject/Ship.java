@@ -1,10 +1,9 @@
 package simulator.simObject;
 
-import static org.lwjgl.opengl.GL11.*;
+import java.util.concurrent.locks.ReentrantLock;
+
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
-import simulator.astro.Conic;
-import simulator.astro.Orbit;
 import simulator.astro.Time;
 import simulator.astro.Vector3D;
 import simulator.plans.FlightPlan;
@@ -16,6 +15,8 @@ public class Ship extends SimObject {
 	private FlightPlan plan;
 
 	public Ship(TLE tle, Body parent) {
+		color = new float[] {1.0f, .2f, .2f};
+		lock = new ReentrantLock();
 		plan = new FlightPlan(this);
 		name = tle.name;
 		setParent(parent);
@@ -50,39 +51,22 @@ public class Ship extends SimObject {
 		update(epoch - lastUpdatedTime);
 		lastUpdatedTime = epoch;
 		plan.updateTo(epoch);
-	}
-
-	@Override
-	public void render(RenderDetail detail) {
-		glPushMatrix();
-
-		// Position to body
-		Vector3D absPos = getAbsolutePos();
-		glTranslated(absPos.x, absPos.y, absPos.z);
-
-		// Draw conic
-		if (detail.ordinal() > RenderDetail.LOW.ordinal()) {
-			glColor3f(1.0f, .4f, .4f);
-			glBegin(GL_LINE_STRIP);
-			Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
-			Conic c = new Conic(orb);
-			int numOfPoints = 50;
-			for (int i = 0; i < numOfPoints; i++) {
-				Vector3D vertex = c.getPosition(i * 2.0 * Math.PI
-						/ (numOfPoints - 1) + orb.v);
-				vertex.subtract(pos);
-				glVertex3d(vertex.x, vertex.y, vertex.z);
+		
+		/* Check for sphere of influence changing */
+		if(pos.magnitude() > parent.soiRadius) {
+			System.out.println(name + " escaped " + parent.name);
+			setParent(parent.parent);
+		} else {
+			for(int i=0; i<parent.children.size(); i++) {
+				SimObject o = parent.children.get(i);
+				if(o instanceof Body) {
+					Body b = (Body) o;
+					if(pos.clone().subtract(b.pos).magnitude()<b.soiRadius) {
+						System.out.println(name + " is in the SOI of " + b.name + "!");
+						setParent(b);
+					}
+				}
 			}
-			glEnd();
 		}
-
-		// Draw point
-		glColor3f(1.0f, .2f, .2f);
-		glBegin(GL_POINTS);
-		glVertex3d(0, 0, 0);
-		glEnd();
-		glColor3f(1.0f, 1.0f, 1.0f);
-
-		glPopMatrix();
 	}
 }

@@ -26,7 +26,6 @@ public class Incline extends Maneuver {
 		/* Get current orbit */
 		Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel,
 				ship.parent.mu);
-		double grav = ship.parent.mu;
 
 		/* Calculate change in inclination */
 		double i_initial = orb.i;
@@ -52,35 +51,8 @@ public class Incline extends Maneuver {
 			vNext = vAscend;
 		}
 
-		double initSum = orb.peri + orb.v;
-
-		/*
-		 * Perform binary search to find time to next node
-		 */
-		double period = 2.0 * Math.PI
-				* Math.sqrt((orb.a * orb.a * orb.a) / grav);
-		double low = 0;
-		double high = period;
-		double mid = (low + high) / 2.0;
-		double tolerance = Math.toRadians(1.0);
-		double anomDif = tolerance * 10.0;
-		int iterations = 0;
-		while (Math.abs(anomDif) > tolerance && iterations < 10) {
-			Vector3D[] futureState = Astrophysics.kepler(ship.pos, ship.vel,
-					ship.parent.mu, mid);
-			Orbit futureOrb = Astrophysics.toOrbitalElements(futureState[0],
-					futureState[1], ship.parent.mu);
-			double sum = futureOrb.peri + futureOrb.v;
-			anomDif = futureOrb.v - vNext;
-			if (anomDif > 0 || sum < initSum) {
-				high = mid;
-			} else {
-				low = mid;
-			}
-			mid = (low + high) / 2.0;
-			iterations++;
-		}
-		double timeToNode = mid;
+		double timeToNode = Astrophysics.timeToAnomaly(ship.pos, ship.vel, orb,
+				ship.parent.mu, vNext);
 
 		/*
 		 * Determine deltaV costs This could also be done by subtracting the two

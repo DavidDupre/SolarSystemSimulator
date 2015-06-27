@@ -32,21 +32,24 @@ public class Hohmann extends Maneuver {
 	public void init() {
 		double grav = ship.parent.mu;
 
+		/*
+		 * Calculate time to first burn
+		 */
 		Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel, grav);
 		double rPeri = orb.a * (1.0 - orb.e);
 		double rApo = orb.a * (1.0 + orb.e);
 		double rInitial = 0;
+		double targetAnomaly = 0;
 		if (rFinal > rApo) {
 			rInitial = rPeri;
-			executeEpoch = ship.lastUpdatedTime
-					+ Astrophysics.timeToAnomaly(ship.pos, ship.vel, orb, grav,
-							2.0 * Math.PI);
+			targetAnomaly = 2.0 * Math.PI;
 		} else {
 			rInitial = rApo;
-			executeEpoch = ship.lastUpdatedTime
-					+ Astrophysics.timeToAnomaly(ship.pos, ship.vel, orb, grav,
-							Math.PI);
+			targetAnomaly = Math.PI;
 		}
+		executeEpoch = ship.lastUpdatedTime
+				+ Astrophysics.timeToAnomaly(ship.pos, ship.vel, orb, grav,
+						targetAnomaly);
 
 		double aTrans = (rInitial + rFinal) / 2.0;
 		double aInitial = (rApo + rPeri) / 2.0;

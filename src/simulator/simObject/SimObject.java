@@ -53,8 +53,8 @@ public abstract class SimObject {
 		glColor3f(color[0], color[1], color[2]);
 		
 		// Draw conic
-		lock.lock();
 		if (detail.ordinal() > RenderDetail.LOW.ordinal()) {
+			lock.lock();
 			if (parent != null) {
 				glBegin(GL_LINE_STRIP);
 				for (int i = 0; i < orbitBuffer.length; i++) {
@@ -63,8 +63,8 @@ public abstract class SimObject {
 				}
 				glEnd();
 			}
+			lock.unlock();
 		}
-		lock.unlock();
 
 		// Draw point
 		glBegin(GL_POINTS);
@@ -109,7 +109,7 @@ public abstract class SimObject {
 
 	protected void update(double delta) {
 		if (parent != null) {
-			lock.lock();
+			lock.lock(); // TODO does this ruin epoch synchronization? 
 			Vector3D[] state = Astrophysics.kepler(pos, vel, parent.mu, delta);
 			pos = state[0];
 			vel = state[1];
@@ -120,11 +120,32 @@ public abstract class SimObject {
 			if (renderDetail.ordinal() > RenderDetail.LOW.ordinal()) {
 				Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
 				Conic c = new Conic(orb);
-				for (int i = 0; i < orbitBuffer.length; i++) {
-					Vector3D vertex = c.getPosition(i * 2.0 * Math.PI
-							/ (orbitBuffer.length - 1) + orb.v);
-					vertex.subtract(pos);
-					orbitBuffer[i] = vertex;
+				if(orb.e < 1.0) {
+					for (int i = 0; i < orbitBuffer.length; i++) {
+						Vector3D vertex = c.getPosition(i * 2.0 * Math.PI
+								/ (orbitBuffer.length - 1) + orb.v);
+						vertex.subtract(pos);
+						orbitBuffer[i] = vertex;
+					}
+				} else {
+					// TODO this can be vastly optimized. Only update escapeV when the ship's orbit changes
+					
+					double timeToEscape = Astrophysics.timeToEscape(pos, vel, parent.mu, parent.soiRadius, true);
+					double timeStep = timeToEscape / orbitBuffer.length;
+					for (int i=0; i<orbitBuffer.length; i++) {
+						Vector3D vertex = Astrophysics.kepler(pos, vel, parent.mu, timeStep*i)[0];
+						vertex.subtract(pos);
+						orbitBuffer[i] = vertex;
+					}
+					
+//					double escapeV = Astrophysics.anomalyToEscape(pos, vel, parent.mu, parent.soiRadius);
+//					System.out.println("escapeV: " + escapeV);
+//					for (int i = 0; i < orbitBuffer.length; i++) {
+//						Vector3D vertex = c.getPosition((i-orbitBuffer.length/2) * escapeV * 2.0
+//								/ (orbitBuffer.length - 1));
+//						vertex.subtract(pos);
+//						orbitBuffer[i] = vertex;
+//					}
 				}
 			}
 			lock.unlock();
@@ -166,5 +187,16 @@ public abstract class SimObject {
 			return vel;
 		}
 		return vel.clone().add(parent.getAbsoluteVel());
+	}
+	
+	public void superLock(boolean doLock) {
+		if(doLock) {
+			lock.lock();
+		} else {
+			lock.unlock();
+		}
+		if(parent != null) {
+			parent.superLock(doLock);
+		}
 	}
 }

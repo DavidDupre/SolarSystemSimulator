@@ -1,5 +1,7 @@
 package simulator.astro;
 
+import simulator.simObject.Ship;
+
 public class Astrophysics {
 	public static/* The one and only D O */double G = 6.67384E-11;
 
@@ -231,11 +233,11 @@ public class Astrophysics {
 		double rootGrav = Math.sqrt(mu);
 
 		double x_0;
-		double small = 0.000001;
-		if (alpha > small) {
+		double parabThresh = 0.000001;
+		if (alpha > parabThresh) {
 			// Circle or ellipse
 			x_0 = rootGrav * deltaT * alpha;
-		} else if (Math.abs(alpha) < small) {
+		} else if (Math.abs(alpha) < parabThresh) {
 			// Parabola
 			Vector3D h = Vector3D.crossProduct(r_0, v_0);
 			double p = h.mag2() / mu;
@@ -259,7 +261,9 @@ public class Astrophysics {
 		double x_n1; // x_{n-1}
 		double dif = 1.0; // temp
 		int attempts = 0;
-		while (dif > small && attempts < 10) {
+		// attempts max is 10 in the book. Increase for more stability
+		// threshold is 1E-6 in book
+		while (dif > 1E-6 && attempts < 100) {
 			psi = x_n * x_n * alpha;
 
 			double[] c2c3 = findC2C3(psi);
@@ -478,8 +482,7 @@ public class Astrophysics {
 		/*
 		 * Perform binary search to find time to next node
 		 */
-		double period = 2.0 * Math.PI
-				* Math.sqrt((orb.a * orb.a * orb.a) / mu);
+		double period = 2.0 * Math.PI * Math.sqrt((orb.a * orb.a * orb.a) / mu);
 		double low = 0;
 		double high = period;
 		double mid = (low + high) / 2.0;
@@ -500,8 +503,354 @@ public class Astrophysics {
 			mid = (low + high) / 2.0;
 			iterations++;
 		}
-		System.out.println(iterations);
 		double timeToNode = mid;
 		return timeToNode;
 	}
+
+	/*------------------------------------------------------------------------------
+	 *
+	 *                           procedure lambertuniv
+	 *
+	 *  this procedure solves the lambert problem for orbit determination and returns
+	 *    the velocity vectors at each of two given position vectors.  the solution
+	 *    uses universal variables for calculation and a bissection technique for
+	 *    updating psi.
+	 *
+	 *  algorithm     : setting the initial bounds:
+	 *                  using -8pi and 4pi2 will allow single rev solutions
+	 *                  using -4pi2 and 8pi2 will allow multi-rev solutions
+	 *                  the farther apart the initial guess, the more iterations
+	 *                    because of the iteration
+	 *                  inner loop is for special cases. must be sure to exit both!
+	 *
+	 *  author        : david vallado                  719-573-2600   22 jun 2002
+	 *
+	 *  inputs          description                    range / units
+	 *    r1          - ijk position vector 1          er
+	 *    r2          - ijk position vector 2          er
+	 *    dm          - direction of motion            'l','s'
+	 *    dttu        - time between r1 and r2         tu
+	 *
+	 *  outputs       :
+	 *    v1          - ijk velocity vector            er / tu
+	 *    v2          - ijk velocity vector            er / tu
+	 *    error       - error flag                     'ok', ...
+	 *
+	 *  locals        :
+	 *    vara        - variable of the iteration,
+	 *                  not the semi or axis!
+	 *    y           - area between position vectors
+	 *    upper       - upper bound for z
+	 *    lower       - lower bound for z
+	 *    cosdeltanu  - cosine of true anomaly change  rad
+	 *    f           - f expression
+	 *    g           - g expression
+	 *    gdot        - g dot expression
+	 *    xold        - old universal variable x
+	 *    xoldcubed   - xold cubed
+	 *    zold        - old value of z
+	 *    znew        - new value of z
+	 *    c2new       - c2(z) function
+	 *    c3new       - c3(z) function
+	 *    timenew     - new time                       tu
+	 *    small       - tolerance for roundoff errors
+	 *    i, j        - index
+	 *
+	 *  coupling      
+	 *    mag         - magnitude of a vector
+	 *    dot         - dot product of two vectors
+	 *    findc2c3    - find c2 and c3 functions
+	 *
+	 *  references    :
+	 *    vallado       2001, 459-464, alg 55, ex 7-5
+	 *
+	 -----------------------------------------------------------------------------*/
+
+	public static Vector3D[] lambert(Vector3D ro, Vector3D r,
+			boolean useLongWay, boolean overrev, double dttu, double mu) {
+		double twopi = 2.0 * Math.PI;
+		double small = 1E-6;
+		int numiter = 40;
+
+		int loops, ynegktr;
+		double vara, y, upper, lower, cosdeltanu, f, g, gdot, xold, xoldcubed, psiold, psinew, c2new, c3new, dtnew = 0;
+		double rMag = r.magnitude();
+		double roMag = ro.magnitude();
+
+		/* -------------------- initialize values -------------------- */
+		psinew = 0.0;
+
+		cosdeltanu = Vector3D.dotProduct(ro, r) / (ro.magnitude() * rMag);
+		if (useLongWay) {
+			vara = -Math.sqrt(roMag * rMag * (1.0 + cosdeltanu));
+		} else {
+			vara = Math.sqrt(roMag * rMag * (1.0 + cosdeltanu));
+		}
+
+		/* ---------------- form initial guesses --------------------- */
+		psiold = 0.0;
+		psinew = 0.0;
+		xold = 0.0;
+		c2new = 0.5;
+		c3new = 1.0 / 6.0;
+
+		/* -------- set up initial bounds for the bissection ------------ */
+		if (overrev) {
+			upper = twopi * twopi;
+			lower = -4.0 * twopi;
+		} else {
+			upper = -0.001 + 4.0 * twopi * twopi; // at 4, not alw work, 2.0,
+													// makes
+			lower = 0.001 + twopi * twopi; // orbit bigger, how about 2 revs??xx
+		}
+
+		/* -------- determine if the orbit is possible at all ---------- */
+		if (Math.abs(vara) > small) {
+			loops = 0;
+			ynegktr = 1; // y neg ktr
+			while (true) {
+				if (Math.abs(c2new) > small) {
+					y = roMag
+							+ rMag
+							- (vara * (1.0 - psiold * c3new) / Math.sqrt(c2new));
+				} else {
+					y = roMag + rMag;
+				}
+				/* ------- check for negative values of y ------- */
+				if ((vara > 0.0) && (y < 0.0)) {
+					ynegktr = 1;
+					while (true) {
+						psinew = 0.8
+								* (1.0 / c3new)
+								* (1.0 - (roMag + rMag) * Math.sqrt(c2new)
+										/ vara);
+
+						/* ------ find c2 and c3 functions ------ */
+						double[] c2c3 = findC2C3(psinew);
+						c2new = c2c3[0];
+						c3new = c2c3[1];
+						psiold = psinew;
+						lower = psiold;
+						if (Math.abs(c2new) > small) {
+							y = roMag
+									+ rMag
+									- (vara * (1.0 - psiold * c3new) / Math
+											.sqrt(c2new));
+						} else {
+							y = roMag + rMag;
+						}
+						ynegktr++;
+						if ((y >= 0.0) || (ynegktr >= 10)) {
+							break;
+						}
+					}
+				}
+
+				if (ynegktr < 10) {
+					if (Math.abs(c2new) > small) {
+						xold = Math.sqrt(y / c2new);
+					} else {
+						xold = 0.0;
+					}
+					xoldcubed = xold * xold * xold;
+					dtnew = (xoldcubed * c3new + vara * Math.sqrt(y))
+							/ Math.sqrt(mu);
+
+					/* ---- readjust upper and lower bounds ---- */
+					if (dtnew < dttu) {
+						lower = psiold;
+					}
+					if (dtnew > dttu) {
+						upper = psiold;
+					}
+					psinew = (upper + lower) * 0.5;
+
+					/* -------------- find c2 and c3 functions ---------- */
+					double[] c2c3 = findC2C3(psinew);
+					c2new = c2c3[0];
+					c3new = c2c3[1];
+					psiold = psinew;
+					loops++;
+
+					/* ---- make sure the first guess isn't too close --- */
+					if ((Math.abs(dtnew - dttu) < small) && (loops == 1)) {
+						dtnew = dttu - 1.0;
+					}
+				}
+
+				if ((Math.abs(dtnew - dttu) < small) || (loops > numiter)
+						|| (ynegktr > 10)) {
+					break;
+				}
+			}
+
+			if ((loops >= numiter) || (ynegktr >= 10)) {
+				System.out.println("loops: " + loops);
+				System.out.println("gnotconv");
+				if (ynegktr >= 10) {
+					System.out.println("y negative");
+				}
+				Exception e = new Exception();
+				e.printStackTrace();
+				System.exit(1);
+			} else {
+				/* ---- use f and g series to find velocity vectors ----- */
+				f = 1.0 - y / roMag;
+				gdot = 1.0 - y / rMag;
+				g = 1.0 / (vara * Math.sqrt(y / mu)); // 1 over g
+				Vector3D v_0 = r.clone().subtract(ro.clone().multiply(f))
+						.multiply(g);
+				Vector3D v = r.clone().multiply(gdot).subtract(ro).multiply(g);
+
+				return new Vector3D[] { v_0, v };
+			}
+		} else {
+			System.out.println("impos 180ø");
+		}
+		return null;
+	}
+
+	/**
+	 * Determine if there is a collision
+	 * 
+	 * @param r_int
+	 *            the position of the intercepter
+	 * @param r_tgt
+	 *            the position of the target
+	 * @param v_transA
+	 *            the velocity along the transfer orbit at the initial time
+	 * @param v_transB
+	 *            the velocity along the transfer orbit at the time of intercept
+	 * @param a
+	 *            the semi-major axis of the transfer orbit
+	 * @param mu
+	 *            the gravitational constant for the system
+	 * @return the radius of periapsis. There is a collision if r_p < r_earth.
+	 *         Note that a low r_p means the body is subject to aerodynamic
+	 *         perturbaterinos, which are not modeled with "kepler()"
+	 */
+	public static double hitEarth(Vector3D r_int, Vector3D r_tgt,
+			Vector3D v_transA, Vector3D v_transB, double a, double mu) {
+		// if(Vector3D.dotProduct(r_int, v_transA)<0 &&
+		// Vector3D.dotProduct(r_tgt, v_transB)>0) {
+		double h_t = Vector3D.crossProduct(r_int, v_transB).magnitude();
+		double p = (h_t * h_t) / mu;
+		double e = Math.sqrt((a - p) / a);
+		double r_p = a * (1 - e);
+		// }
+		return r_p;
+	}
+
+	public static Vector3D[] target(Vector3D r_int, Vector3D r_tgt,
+			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu) {
+		// Propagate target
+		Vector3D[] state = kepler(r_tgt, v_tgt, mu, deltaT);
+		Vector3D r_tgtB = state[0];
+		Vector3D v_tgtB = state[1];
+
+		// Determine tranfer orbit
+		Vector3D[] trans = lambert(r_int, r_tgtB, false, false, deltaT, mu);
+		Vector3D v_transA = trans[0];
+		Vector3D v_transB = trans[1];
+
+		Vector3D deltaVA = v_transA.clone().subtract(v_int);
+		Vector3D deltaVB = v_tgtB.clone().subtract(v_transB);
+
+		// Check for Earth impact TODO
+
+		return new Vector3D[] { deltaVA, deltaVB };
+	}
+
+	public static Vector3D[] target(Ship inter, Ship target, double deltaT) {
+		return target(inter.pos, target.pos, inter.vel, target.vel, deltaT,
+				inter.parent.mu);
+	}
+
+	public static double timeToEscape(Vector3D pos, Vector3D vel, double mu,
+			double soiRadius) {
+		return timeToEscape(pos, vel, mu, soiRadius, false);
+	}
+
+	/**
+	 * TODO doesn't work through perigee
+	 * 
+	 * @param pos
+	 * @param vel
+	 * @param mu
+	 * @param soiRadius
+	 * @param reverse
+	 * @return
+	 */
+	public static double timeToEscape(Vector3D pos, Vector3D vel, double mu,
+			double soiRadius, boolean reverse) {
+		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, mu);
+		orb.v = Math.PI; // TODO not sure if this works for hyperbolas
+		double apoVel = Astrophysics.toRV(orb, mu, false)[1].magnitude();
+		// max time to escape
+		double high = (soiRadius / apoVel) * (reverse ? -1.0 : 1.0);
+		double low = 0;
+		double mid = (low + high) / 2.0;
+
+		double dif = soiRadius - pos.magnitude();
+		double tolerance = soiRadius / 1E9;
+		int iterations = 0;
+		while (Math.abs(dif) > tolerance && iterations < 100) {
+			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
+			double r = futureState[0].magnitude();
+			System.out.println("r: " + r);
+
+			dif = r - soiRadius;
+
+			if (r > soiRadius) {
+				high = mid;
+			} else {
+				low = mid;
+			}
+			mid = (low + high) / 2.0;
+
+			iterations++;
+
+		}
+		System.out.println();
+		
+		return mid;
+	}
+	
+	public static double anomalyToEscape(Vector3D pos, Vector3D vel, double mu,
+			double soiRadius) {
+		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, mu);
+		orb.v = Math.PI; // TODO not sure if this works for hyperbolas
+		double apoVel = Astrophysics.toRV(orb, mu, false)[1].magnitude();
+		// max time to escape
+		double high = (soiRadius / apoVel);
+		double low = 0;
+		double mid = (low + high) / 2.0;
+
+		Vector3D futurePos = new Vector3D();
+		Vector3D futureVel = new Vector3D();
+		double dif = soiRadius - pos.magnitude();
+		double tolerance = soiRadius / 1E9;
+		int iterations = 0;
+		while (Math.abs(dif) > tolerance && iterations < 100) {
+			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
+			futurePos = futureState[0];
+			futureVel = futureState[1];
+
+			double r = futurePos.magnitude();
+			dif = r - soiRadius;
+
+			if (r > soiRadius) {
+				high = mid;
+			} else {
+				low = mid;
+			}
+			mid = (low + high) / 2.0;
+
+			iterations++;
+		}
+		Orbit futureOrb = toOrbitalElements(futurePos, futureVel, mu);
+
+		return futureOrb.v;
+	}
+
 }

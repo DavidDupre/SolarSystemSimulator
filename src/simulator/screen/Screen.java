@@ -76,14 +76,14 @@ public class Screen {
 			updateGL();
 
 			SimObject focus = sim.getFocus();
-			focus.lock.lock();
+			focus.superLock(true);
 			if (focus != null) {
 				camera.lookAt(focus.getAbsolutePos());
 			}
 
 			camera.apply();
 			renderer.update();
-			focus.lock.unlock();
+			focus.superLock(false);
 
 			Display.update();
 			Display.sync(60);

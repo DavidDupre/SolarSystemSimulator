@@ -2,6 +2,8 @@ package simulator;
 
 import java.util.ArrayList;
 
+import simulator.astro.Astrophysics;
+import simulator.astro.Time;
 import simulator.screen.Renderer;
 import simulator.simObject.Body;
 import simulator.simObject.Ship;
@@ -22,7 +24,7 @@ public class SolarSystem extends Thread {
 	private Thread thread;
 	private long lastTime;
 	private double simStartTimeTAI;
-	private double epochTAI;
+	private double epochTAI = Double.NaN;
 	
 	public SolarSystem(Simulation sim) {
 		renderer = new SolarSystemRenderer();
@@ -39,11 +41,24 @@ public class SolarSystem extends Thread {
 	public double getEpoch() {
 		return epochTAI;
 	}
+	
+	public void setEpoch(double epoch) {
+		this.epochTAI = epoch;
+	}
+	
+	/*
+	 * TODO fix this
+	 */
+	public void setEpoch(int yr, int mo, int d, int h, int min, double s) {
+		setEpoch(Time.jdToTAI(Time.getJulianDate(yr, mo, d, h, min, s)));
+	}
 
 	@Override
 	public void run() {
 		lastTime = System.currentTimeMillis();
-		epochTAI = simStartTimeTAI;
+		if(Double.isNaN(epochTAI)) {
+			epochTAI = simStartTimeTAI;
+		}
 		while (true) {
 			/*
 			 * Add objects to the render update list. Children of all direct
@@ -66,6 +81,7 @@ public class SolarSystem extends Thread {
 				o.updateTo(epochTAI);
 			}
 			//System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
+			//System.out.println("Current epoch: " + Time.getJulianDate((long) (1000 * epochTAI)));
 		}
 	}
 	

@@ -1,11 +1,8 @@
 Optimizations:
 	- use KeplerCOE
-	- buffer orbits for static orbits (but do it so it's pretty)
 	- Canonical units
 	
 Features:
-	- Two-line elements
-		- load TLEs individually or by category using a GUI
 	- GUI
 		- Edit date (epoch)
 		- Control simulation speed
@@ -21,8 +18,8 @@ Features:
 Bugs:
 	- Neptune escaped satellite at high speeds
 	- Shakes at large distances
-	- Hohmann transfers into eccentric orbit
-		- Because it starts eccentric?
-		- Make sure flight path angle is zero!
 	- Satellites escape at low fps (~2 fps)
+	- locking while updating could cause some epoch inaccuracies 
+	- hyperbolas are ugly
+		- fix by finding the true anomaly of escape
 	

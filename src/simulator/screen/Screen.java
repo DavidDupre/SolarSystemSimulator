@@ -90,6 +90,5 @@ public class Screen {
 		}
 
 		Display.destroy();
-		System.exit(0);
 	}
 }

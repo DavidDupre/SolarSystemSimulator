@@ -2,7 +2,6 @@ package simulator;
 
 import java.util.ArrayList;
 
-import simulator.astro.Astrophysics;
 import simulator.astro.Time;
 import simulator.screen.Renderer;
 import simulator.simObject.Body;

@@ -24,11 +24,12 @@ public class ManeuverFactory {
 		classMap.put("Direct", Direct.class);
 	}
 	
-	public Maneuver createNewManeuver(String[] args) {
+	public Maneuver createNewManeuver(String type, HashMap<String, String> args) {
 		Maneuver m = null;
 		try {
-			Class c = classMap.get((String) args[0]);
-			Constructor constructor = c.getConstructor(String[].class);
+			Class c = classMap.get(type);
+			// TODO fix this next line. InvocationTargetException
+			Constructor constructor = c.getConstructor(new HashMap<String, String>().getClass());
 			m = (Maneuver) constructor.newInstance((Object)args);
 		} catch (InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e) {

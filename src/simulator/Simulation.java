@@ -3,6 +3,8 @@ package simulator;
 import java.io.File;
 import java.net.URISyntaxException;
 
+import simulator.scenario.ScenarioEditor;
+import simulator.scenario.ScenarioLoader;
 import simulator.screen.Screen;
 import simulator.simObject.SimObject;
 
@@ -33,14 +35,13 @@ public class Simulation {
 
 	public void start() {
 		solarSystem = new SolarSystem(this);
-		ScenarioParser parser = new ScenarioParser(this, "/res/scenario.xml");
-		solarSystem.start();
-		parser.loadPlans();
 		
-//		for(int i=0; i<TLELoader.categories.length; i++) {
-//			solarSystem.addObjects(loader.getShips(TLELoader.categories[i])); 
-//		}
-
+		ScenarioLoader loader = new ScenarioLoader(this, rootFilePath + "/res/fullScenario.xml");
+		loader.init();
+		
+		solarSystem.start();
+		loader.loadPlans();
+				
 //		Vector3D[] target = Astrophysics.target(
 //				new Vector3D(-6518108.3, -2403847.9, -22172.2),
 //				new Vector3D(6697475.6, 1794583.2, 0.0),
@@ -51,7 +52,11 @@ public class Simulation {
 
 		Screen screen = new Screen(this);
 		screen.setRenderer(solarSystem.getRenderer());
-		screen.start();
+		screen.start();		
+		
+		export();
+
+		System.exit(0);
 	}
 
 	public void setFocus(SimObject focus) {
@@ -62,6 +67,24 @@ public class Simulation {
 
 	public SimObject getFocus() {
 		return focus;
+	}
+	
+	/**
+	 * Save all the simulation data and settings as a scenario file
+	 */
+	public void export() {
+		ScenarioEditor editor = new ScenarioEditor(rootFilePath + "/res/fullScenario.xml");
+		
+		editor.setFocus(focus.name);
+		editor.setSpeed(String.valueOf(simSpeed));
+		
+		// TODO save epoch
+		
+		for(SimObject o : solarSystem.getObjects()) {
+			editor.addObject(o);
+		}
+		
+		editor.updateFile();
 	}
 
 	public static void main(String[] args) {

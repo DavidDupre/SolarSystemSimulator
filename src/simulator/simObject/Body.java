@@ -89,6 +89,35 @@ public class Body extends SimObject {
 		}
 		updateTo(now);
 	}
+	
+	public Body(String name, Body parent, double mass, double radius,
+			Vector3D[] state, double epoch) {
+		color = new float[] { 1.0f, 1.0f, 1.0f };
+		lock = new ReentrantLock();
+		sphere = new Sphere();
+		this.name = name;
+		children = new ArrayList<SimObject>();
+		this.mass = mass;
+		mu = mass * Astrophysics.G;
+		this.radius = radius;
+		pos = state[0];
+		vel = state[1];
+		if (parent != null) {
+			setParent(parent);
+			this.orb = Astrophysics.toOrbitalElements(state[0], state[1], parent.mu);
+			soiRadius = orb.a * Math.pow(mass / parent.mass, 2.0 / 5.0);
+		} else {
+			soiRadius = Double.MAX_VALUE;
+		}
+
+		double now = System.currentTimeMillis() / 1000.0;
+		if (Simulation.REAL_TIME) {
+			lastUpdatedTime = Time.jdToTAI(epoch);
+		} else {
+			lastUpdatedTime = now;
+		}
+		updateTo(now);
+	}
 
 	public ArrayList<SimObject> getChildren() {
 		return children;

@@ -1,6 +1,7 @@
 package simulator.plans;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
@@ -20,11 +21,17 @@ public class Incline extends Maneuver {
 	public Incline(double i_final) {
 		this.i_final = i_final;
 		burns = new ArrayList<Burn>();
+		
+		inputs = new HashMap<String, String>();
+		inputs.put("i", String.valueOf(i_final));
 	}
-	
-	public Incline(String[] args) {
-		this.i_final = Math.toRadians(Double.parseDouble(args[1]));
+
+	public Incline(HashMap<String, String> args) {
+		this.i_final = Math.toRadians(Double.parseDouble((String) args.values()
+				.toArray()[0]));
 		burns = new ArrayList<Burn>();
+		
+		inputs = args;
 	}
 
 	public void init() {

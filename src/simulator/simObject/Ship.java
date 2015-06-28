@@ -32,6 +32,31 @@ public class Ship extends SimObject {
 		}
 		updateTo(now);
 	}
+	
+	/**
+	 * 
+	 * @param name
+	 * @param state
+	 * @param parent
+	 * @param epoch Epoch in julian date
+	 */
+	public Ship(String name, Vector3D[] state, Body parent, double epoch) {
+		color = new float[] {1.0f, .2f, .2f};
+		lock = new ReentrantLock();
+		plan = new FlightPlan(this);
+		this.name = name;
+		setParent(parent);
+		this.orb = Astrophysics.toOrbitalElements(state[0], state[1], parent.mu);
+		pos = state[0];
+		vel = state[1];
+		double now = System.currentTimeMillis() / 1000.0;
+		if(Simulation.REAL_TIME) {
+			lastUpdatedTime = Time.jdToTAI(epoch);
+		} else {
+			lastUpdatedTime = now;
+		}
+		updateTo(now);
+	}
 
 	public void addManeuver(Maneuver m) {
 		m.setShip(this);
@@ -39,6 +64,10 @@ public class Ship extends SimObject {
 			m.init();
 		}
 		plan.addManeuver(m);
+	}
+	
+	public FlightPlan getPlan() {
+		return plan;
 	}
 
 	/**

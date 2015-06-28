@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<scenerio>
+	<focus>Earth</focus>
+	<speed>2E3</speed>
+	<epoch yr="2015" mo="6" d="27" h="0" min="0" s="0"></epoch>
+	<group type="body" path="/res/solarSystem.csv"></group>
+	<group type="ship" category="stations"></group>
+	<plan name="ISS (ZARYA)">
+		<command type="Incline" i="0"></command>
+		<command type="Hohmann" r="1E7"></command>
+	</plan>
+	<plan name="SPINSAT">
+		<command type="Incline" i="0"></command>
+		<command type="Hohmann" r="2E7"></command>
+	</plan>
+</scenerio>

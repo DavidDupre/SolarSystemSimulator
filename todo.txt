@@ -22,4 +22,4 @@ Bugs:
 	- locking while updating could cause some epoch inaccuracies 
 	- hyperbolas are ugly
 		- fix by finding the true anomaly of escape
-	
+		- or time of escape

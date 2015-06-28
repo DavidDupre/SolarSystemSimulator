@@ -3,16 +3,10 @@ package simulator;
 import java.io.File;
 import java.net.URISyntaxException;
 
-import simulator.astro.Time;
 import simulator.screen.Screen;
-import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 
 public class Simulation {
-	/*
-	 * Simulation seconds per real seconds
-	 */
-	public static final double SIM_SPEED = 1.0;
 	public static final boolean USE_INTERNET = false;
 
 	/**
@@ -22,54 +16,29 @@ public class Simulation {
 	public static final boolean REAL_TIME = true;
 
 	private SimObject focus;
-
 	public SolarSystem solarSystem;
-
-	public void start() {
-		solarSystem = new SolarSystem(this);
-		SystemLoader loader = new SystemLoader();
-
-		String filePath = "/res/solarSystem.csv";
+	
+	public String rootFilePath;
+	public double simSpeed;
+	
+	public Simulation() {
 		try {
 			File jarFile = new File(getClass().getProtectionDomain()
 					.getCodeSource().getLocation().toURI().getPath());
-			String root = jarFile.getParent();
-			filePath = root + filePath;
+			rootFilePath = jarFile.getParent();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
+	}
 
-		solarSystem.addObjects(loader.getObjects(filePath));
-		solarSystem.addObjects(loader.getShips("iss"));
-//		solarSystem.addObjects(loader.getShips("stations"));
-//		solarSystem.addObjects(loader.getShips("resource"));
-//		solarSystem.addObjects(loader.getShips("geo"));
-
+	public void start() {
+		solarSystem = new SolarSystem(this);
+		ScenarioParser parser = new ScenarioParser(this, "/res/scenario.xml");
+		solarSystem.start();
+		parser.loadPlans();
+		
 //		for(int i=0; i<TLELoader.categories.length; i++) {
 //			solarSystem.addObjects(loader.getShips(TLELoader.categories[i])); 
-//		}
-		 
-		Ship iss = (Ship) solarSystem.getObject("ISS (ZARYA)");
-		setFocus(solarSystem.getObject("Earth"));
-		solarSystem.start();
-		solarSystem.setEpoch(2015, 6, 30, 0, 0, 0);
-		System.out.println(Time.getJulianDate((long)(1000*solarSystem.getEpoch())));
-
-		/*
-		 * Add maneuvers after starting the solar system
-		 */
-		
-//		iss.vel.multiply(2.0);
-		
-//		for(SimObject o : solarSystem.getObjects()) {
-//			if(o instanceof Ship) {
-//				Ship s = (Ship) o;
-//				s.addManeuver(new WaitCommand(5000));
-//				s.addManeuver(new Incline(0));
-//				s.addManeuver(new Hohmann(1E7));
-//				s.addManeuver(new Hohmann(1E7));
-//				s.addManeuver(new Hohmann(1E7));
-//			}
 //		}
 
 //		Vector3D[] target = Astrophysics.target(
@@ -86,7 +55,9 @@ public class Simulation {
 	}
 
 	public void setFocus(SimObject focus) {
-		this.focus = focus;
+		if(focus != null) {
+			this.focus = focus;
+		}
 	}
 
 	public SimObject getFocus() {

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<!-- 
+June 27, 2015
+Example scenario. Do not edit.
+-->
+
+<scenario>
+	<!-- The focus body is what the camera looks at by default. Use the name of a ship or body (case-sensitive). -->
+	<focus>Earth</focus>
+	
+	<!-- The simulation speed, in multiples of real time (1000 means 1 second real time = 1000 seconds simulation time). -->
+	<speed>2E4</speed>
+	
+	<!-- The starting epoch. Leave blank to start at the computer system time. Months and days are NOT zero-based. -->
+	<epoch yr="2015" mo="6" d="27" h="0" min="0" s="0"></epoch>
+	
+	<!-- Load simulation objects in groups. -->
+	<!-- Bodies are loaded from .csv files. File paths are relative to the binary or jar file. -->
+	<group type="body" path="/res/solarSystem.csv"></group>
+	
+	<!-- Ships can be loaded in groups by category (from Celestrak) or one at a time. -->
+	<group type="ship" category="stations"></group>
+	<group type="ship" category="stations" name="ISS (ZARYA)"></group>
+	
+	<!-- Flight plans are created by first specifying the name of the ship. The plan's command will be executed in sequence. -->
+	<plan name="ISS (ZARYA)">
+		<command type="Incline" i="0"></command>
+		<command type="Hohmann" r="1E7"></command>
+	</plan>
+	<plan name="SPINSAT">
+		<command type="Incline" i="0"></command>
+		<command type="Hohmann" r="2E7"></command>
+	</plan>
+</scenario>

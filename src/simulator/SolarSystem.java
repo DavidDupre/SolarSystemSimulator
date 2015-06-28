@@ -87,7 +87,7 @@ public class SolarSystem extends Thread {
 	
 	private void updateEpoch() {
 		double delta = getDeltaTime() / 1000.0;
-		delta *= Simulation.SIM_SPEED;
+		delta *= sim.simSpeed;
 		epochTAI += delta;
 	}
 

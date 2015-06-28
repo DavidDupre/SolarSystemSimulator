@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import simulator.simObject.Ship;
 
-public abstract class Maneuver {
+public abstract class Maneuver {	
 	protected ArrayList<Burn> burns;
 	protected Ship ship;
 	public double deltaV;

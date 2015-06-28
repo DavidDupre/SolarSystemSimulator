@@ -21,6 +21,11 @@ public class Incline extends Maneuver {
 		this.i_final = i_final;
 		burns = new ArrayList<Burn>();
 	}
+	
+	public Incline(String[] args) {
+		this.i_final = Math.toRadians(Double.parseDouble(args[1]));
+		burns = new ArrayList<Burn>();
+	}
 
 	public void init() {
 		/* Get current orbit */

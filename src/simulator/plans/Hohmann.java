@@ -28,6 +28,11 @@ public class Hohmann extends Maneuver {
 		this.rFinal = rFinal;
 		burns = new ArrayList<Burn>();
 	}
+	
+	public Hohmann(String[] args) {
+		this.rFinal = Double.parseDouble(args[1]);
+		burns = new ArrayList<Burn>();
+	}
 
 	public void init() {
 		double grav = ship.parent.mu;

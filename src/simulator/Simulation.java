@@ -1,9 +1,14 @@
 package simulator;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 
 import simulator.scenario.ScenarioEditor;
+import simulator.scenario.ScenarioFactory;
 import simulator.scenario.ScenarioLoader;
 import simulator.screen.Screen;
 import simulator.simObject.SimObject;
@@ -73,7 +78,16 @@ public class Simulation {
 	 * Save all the simulation data and settings as a scenario file
 	 */
 	public void export() {
-		ScenarioEditor editor = new ScenarioEditor(rootFilePath + "/res/fullScenario.xml");
+		String filePath = rootFilePath + "/res/fullScenario.xml";
+		
+		try {
+			PrintWriter pw = new PrintWriter(filePath);
+			pw.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		ScenarioEditor editor = new ScenarioEditor(ScenarioFactory.newScenario(filePath));
 		
 		editor.setFocus(focus.name);
 		editor.setSpeed(String.valueOf(simSpeed));

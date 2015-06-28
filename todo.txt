@@ -15,6 +15,9 @@ Features:
 	- Library of maneuvers
 	- Record delta-v expenditures. Sum for flight plans
 	- Parent-child heirarchy shouldn't depend on when you load the objects
+	- Exporting/saving
+		- Should save the epoch
+		- Should be able to handle saving the states of flight plans (whether they finished or not)
 	
 Bugs:
 	- Neptune escaped satellite at high speeds

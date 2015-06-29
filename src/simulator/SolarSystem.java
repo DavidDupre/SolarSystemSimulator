@@ -45,9 +45,10 @@ public class SolarSystem extends Thread {
 		this.epochTAI = epoch;
 	}
 	
-	/*
-	 * TODO fix this
-	 */
+	public void setEpochJD(double jd) {
+		setEpoch(Time.jdToTAI(jd));
+	}
+	
 	public void setEpoch(int yr, int mo, int d, int h, int min, double s) {
 		setEpoch(Time.jdToTAI(Time.getJulianDate(yr, mo, d, h, min, s)));
 	}
@@ -79,8 +80,8 @@ public class SolarSystem extends Thread {
 				updateEpoch();
 				o.updateTo(epochTAI);
 			}
-			//System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
-			//System.out.println("Current epoch: " + Time.getJulianDate((long) (1000 * epochTAI)));
+//			System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
+//			System.out.println("Current epoch: " + Time.getJulianDate((long) (1000 * epochTAI)));
 		}
 	}
 	
@@ -110,7 +111,11 @@ public class SolarSystem extends Thread {
 			this.objects.addAll(objects);
 		}
 	}
-
+	
+	/**
+	 * @param name
+	 * @return The first object with the given name
+	 */
 	public SimObject getObject(String name) {
 		for (SimObject o : objects) {
 			if (o.name.equals(name)) {
@@ -118,6 +123,14 @@ public class SolarSystem extends Thread {
 			}
 		}
 		return null;
+	}
+	
+	public void removeObject(SimObject object) {
+		objects.remove(object);
+		if(object instanceof Body) {
+			objects.removeAll(((Body) object).getChildren());
+		}
+		object.parent.getChildren().remove(object);
 	}
 
 	public ArrayList<SimObject> getObjects() {

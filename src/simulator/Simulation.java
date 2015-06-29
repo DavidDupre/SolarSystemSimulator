@@ -2,15 +2,15 @@ package simulator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 
 import simulator.scenario.ScenarioEditor;
 import simulator.scenario.ScenarioFactory;
 import simulator.scenario.ScenarioLoader;
+import simulator.scenario.source.Source;
 import simulator.screen.Screen;
+import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 
 public class Simulation {
@@ -24,6 +24,7 @@ public class Simulation {
 
 	private SimObject focus;
 	public SolarSystem solarSystem;
+	private ScenarioLoader loader;
 	
 	public String rootFilePath;
 	public double simSpeed;
@@ -41,7 +42,7 @@ public class Simulation {
 	public void start() {
 		solarSystem = new SolarSystem(this);
 		
-		ScenarioLoader loader = new ScenarioLoader(this, rootFilePath + "/res/fullScenario.xml");
+		loader = new ScenarioLoader(this, rootFilePath + "/res/fullScenario.xml");
 		loader.init();
 		
 		solarSystem.start();
@@ -59,7 +60,9 @@ public class Simulation {
 		screen.setRenderer(solarSystem.getRenderer());
 		screen.start();		
 		
+		System.out.println("exporting simulation");
 		export();
+		System.out.println("export complete");
 
 		System.exit(0);
 	}
@@ -80,6 +83,7 @@ public class Simulation {
 	public void export() {
 		String filePath = rootFilePath + "/res/fullScenario.xml";
 		
+		// Remove contents of file
 		try {
 			PrintWriter pw = new PrintWriter(filePath);
 			pw.close();
@@ -91,11 +95,19 @@ public class Simulation {
 		
 		editor.setFocus(focus.name);
 		editor.setSpeed(String.valueOf(simSpeed));
+		editor.setEpoch(solarSystem.getEpoch());
 		
-		// TODO save epoch
+		for(Source s : loader.sources) {
+			editor.addGroup(s);
+		}
 		
 		for(SimObject o : solarSystem.getObjects()) {
-			editor.addObject(o);
+			if(o instanceof Ship) {
+				if(((Ship) o).storeRaw) {
+					editor.addObject(o);
+				}
+				editor.addPlan(((Ship) o).getPlan());
+			}
 		}
 		
 		editor.updateFile();

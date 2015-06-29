@@ -15,6 +15,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -136,7 +137,24 @@ public class ScenarioEditor {
 	}
 	
 	public void setEpoch(double epochTAI) {
-		// TODO make this work
+		Element e = getEpochElement();
+		if(e == null) {
+			e = doc.createElement("epoch");
+			doc.getDocumentElement().appendChild(e);
+		}
+		if(e.hasAttributes()) {
+			NamedNodeMap attr = e.getAttributes();
+			int length = attr.getLength();
+			Node[] toRemove = new Node[length];
+			for(int i=0; i<length; i++) {
+				toRemove[i] = attr.item(i);
+			}
+			for(int i=0; i<length; i++) {
+				e.removeAttributeNode((Attr) toRemove[i]);
+			}
+		}
+		e.setAttribute("time", String.valueOf(epochTAI));
+		e.setAttribute("type", "tai");
 	}
 
 	private void loadObjects() {
@@ -186,7 +204,7 @@ public class ScenarioEditor {
 		}
 		return shipElements;
 	}
-
+	
 	protected NodeList getPlanNodes() {
 		return doc.getElementsByTagName("plan");
 	}
@@ -252,33 +270,35 @@ public class ScenarioEditor {
 	 * @param plan
 	 */
 	public void addPlan(FlightPlan plan) {
-		Element e = getPlanElement(plan.ship.name);
-		if (e == null) {
-			// New element
-			e = doc.createElement("plan");
-			e.setAttribute("name", plan.ship.name);
-			doc.getDocumentElement().appendChild(e);
-		} else {
-			// Overwrite element
-			NodeList nList = e.getElementsByTagName("command");
-			int length = nList.getLength();
-			Node[] toRemove = new Node[length];
-			for (int i = 0; i < length; i++) {
-				toRemove[i] = nList.item(i);
+		if(!plan.getManeuvers().isEmpty()) {
+			Element e = getPlanElement(plan.ship.name);
+			if (e == null) {
+				// New element
+				e = doc.createElement("plan");
+				e.setAttribute("name", plan.ship.name);
+				doc.getDocumentElement().appendChild(e);
+			} else {
+				// Overwrite element
+				NodeList nList = e.getElementsByTagName("command");
+				int length = nList.getLength();
+				Node[] toRemove = new Node[length];
+				for (int i = 0; i < length; i++) {
+					toRemove[i] = nList.item(i);
+				}
+				for (int i = 0; i < length; i++) {
+					e.removeChild(toRemove[i]);
+				}
 			}
-			for (int i = 0; i < length; i++) {
-				e.removeChild(toRemove[i]);
+			for (Maneuver m : plan.getManeuvers()) {
+				Element command = doc.createElement("command");
+				command.setAttribute("type", m.getClass().getSimpleName());
+				for (String key : m.inputs.keySet()) {
+					Element param = doc.createElement("param");
+					param.setAttribute(key, m.inputs.get(key));
+					command.appendChild(param);
+				}
+				e.appendChild(command);
 			}
-		}
-		for (Maneuver m : plan.getManeuvers()) {
-			Element command = doc.createElement("command");
-			command.setAttribute("type", m.getClass().getSimpleName());
-			for (String key : m.inputs.keySet()) {
-				Element param = doc.createElement("param");
-				param.setAttribute(key, m.inputs.get(key));
-				command.appendChild(param);
-			}
-			e.appendChild(command);
 		}
 	}
 

@@ -8,12 +8,10 @@ import simulator.simObject.Ship;
 
 public class FlightPlan {
 	private ArrayList<Maneuver> maneuvers;
-	private int index;
 	public Ship ship;
 
 	public FlightPlan(Ship ship) {
 		this.ship = ship;
-		index = 0;
 		maneuvers = new ArrayList<Maneuver>();
 	}
 
@@ -50,12 +48,14 @@ public class FlightPlan {
 
 	public void updateTo(double epoch) {
 		if (!maneuvers.isEmpty()) {
-			Maneuver current = maneuvers.get(index);
+			Maneuver current = maneuvers.get(0);
 			current.updateTo(epoch);
-			if (current.isFinished() && index < maneuvers.size() - 1) {
-				index++;
-				current = maneuvers.get(index);
-				current.init();
+			if(current.isFinished()) {
+				maneuvers.remove(0);
+				if(!maneuvers.isEmpty()){
+					current = maneuvers.get(0);
+					current.init();
+				}
 			}
 		}
 	}

@@ -21,6 +21,7 @@ public abstract class Maneuver {
 			if(!b.isFinished) {
 				/* If the ship has missed the burn, reverse time */
 				if(ship.lastUpdatedTime > b.epoch) {
+					ship.storeRaw = true;
 					ship.updateTo(b.epoch);
 					b.execute();
 				}

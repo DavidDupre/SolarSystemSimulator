@@ -9,7 +9,9 @@ import simulator.Simulation;
 import simulator.astro.Vector3D;
 
 public class Camera {
-	private float centerDistance, pitch, yaw;
+	public float centerDistance;
+	public float pitch;
+	public float yaw;
 	private double scale;
 	private Vector3D pos;
 	private InputThread input;
@@ -58,6 +60,12 @@ public class Camera {
 	
 	public void setScale(double scale) {
 		this.scale = scale;
+	}
+	
+	public void set(float pitch, float yaw, float zoom) {
+		this.pitch = pitch;
+		this.yaw = yaw;
+		this.centerDistance = zoom;
 	}
 
 	private class InputThread extends Thread {

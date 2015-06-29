@@ -21,6 +21,13 @@ import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 import simulator.tle.TLE;
 
+/**
+ * 
+ * Loads all data from scenario files directly into the simulation
+ * 
+ * @author David
+ *
+ */
 public class ScenarioLoader {
 	private Simulation sim;
 	private SystemLoader loader;
@@ -28,6 +35,12 @@ public class ScenarioLoader {
 
 	public ArrayList<Source> sources;
 
+	/**
+	 * @param sim
+	 *            the simulation to edit
+	 * @param filePath
+	 *            the scenario to load
+	 */
 	public ScenarioLoader(Simulation sim, String filePath) {
 		this.sim = sim;
 		loader = new SystemLoader();
@@ -35,6 +48,12 @@ public class ScenarioLoader {
 		sources = new ArrayList<Source>();
 	}
 
+	/**
+	 * Call init to load all bodies and settings into the simulation except for
+	 * the flight plans. Call loadPlans() after starting the simulation.
+	 * 
+	 * TODO get rid of all the order-specific BS
+	 */
 	public void init() {
 		/*
 		 * Load groups
@@ -80,6 +99,17 @@ public class ScenarioLoader {
 		if (eSpeed != null) {
 			double speed = Double.parseDouble(eSpeed.getTextContent());
 			sim.simSpeed = speed;
+		}
+
+		/*
+		 * Load camera
+		 */
+		Element eCam = editor.getCameraElement();
+		if (eCam != null) {
+			float pitch = Float.parseFloat(eCam.getAttribute("pitch"));
+			float yaw = Float.parseFloat(eCam.getAttribute("yaw"));
+			float zoom = Float.parseFloat(eCam.getAttribute("zoom"));
+			sim.screen.camera.set(pitch, yaw, zoom);
 		}
 	}
 
@@ -183,10 +213,10 @@ public class ScenarioLoader {
 			 * replace it with the individual object
 			 */
 			SimObject duplicate = sim.solarSystem.getObject(object.name);
-			if(duplicate != null) {
+			if (duplicate != null) {
 				sim.solarSystem.removeObject(duplicate);
 			}
-			
+
 			sim.solarSystem.addObject(object);
 		}
 	}
@@ -198,6 +228,10 @@ public class ScenarioLoader {
 		return new Vector3D(x, y, z);
 	}
 
+	/**
+	 * Load the flight plans from the scenario file. Call this AFTER init() and
+	 * simulation.start()
+	 */
 	public void loadPlans() {
 		NodeList plans = editor.getPlanNodes();
 		ManeuverFactory factory = new ManeuverFactory();

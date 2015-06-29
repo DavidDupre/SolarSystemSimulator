@@ -16,7 +16,7 @@ public class Screen {
 	private Renderer renderer;
 	private Simulation sim;
 
-	private Camera camera;
+	public Camera camera;
 
 	public Screen(Simulation sim) {
 		this.renderer = new SphereRenderer();
@@ -76,14 +76,13 @@ public class Screen {
 			updateGL();
 
 			SimObject focus = sim.getFocus();
-			focus.superLock(true);
 			if (focus != null) {
+				focus.superLock(true);
 				camera.lookAt(focus.getAbsolutePos());
+				camera.apply();
+				renderer.update();
+				focus.superLock(false);
 			}
-
-			camera.apply();
-			renderer.update();
-			focus.superLock(false);
 
 			Display.update();
 			Display.sync(60);

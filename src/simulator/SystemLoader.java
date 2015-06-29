@@ -16,7 +16,7 @@ import simulator.tle.TLE;
 import simulator.tle.TLELoader;
 
 /**
- * Load solar system data from CSV files
+ * Load solar system bodies from CSV files
  * 
  * @author S-2482153
  *
@@ -34,15 +34,16 @@ public class SystemLoader {
 	 * Get a list of satellites loaded from the Celestrak database
 	 * 
 	 * @param category
-	 *            - the category to load from
+	 *            - the category to load from. Category name found in
+	 *            TLELoader.java
 	 * @return
 	 */
 	public ArrayList<SimObject> getShips(String category) {
 		ArrayList<TLE> tles = tleLoader.getCategory(category);
 		ArrayList<SimObject> ships = new ArrayList<SimObject>();
 		Body earth = (Body) getObject("Earth");
-		if(earth == null) {
-			if(objects.isEmpty()) {
+		if (earth == null) {
+			if (objects.isEmpty()) {
 				earth = new Body();
 			} else {
 				earth = (Body) objects.get(0);
@@ -53,12 +54,22 @@ public class SystemLoader {
 		}
 		return ships;
 	}
-	
+
+	/**
+	 * Get a single ship from the Celestrak database
+	 * 
+	 * @param category
+	 *            the category to load from
+	 * @param name
+	 *            the name of the satellite. If there are duplicate names, the
+	 *            first match will be used
+	 * @return
+	 */
 	public SimObject getShip(String category, String name) {
 		TLE tle = tleLoader.getTLE(category, name);
 		Body earth = (Body) getObject("Earth");
-		if(earth == null) {
-			if(objects.isEmpty()) {
+		if (earth == null) {
+			if (objects.isEmpty()) {
 				earth = new Body();
 			} else {
 				earth = (Body) objects.get(0);
@@ -67,16 +78,26 @@ public class SystemLoader {
 		Ship ship = new Ship(tle, earth);
 		return ship;
 	}
-	
+
+	/**
+	 * Get an object which has already been loaded
+	 * @param name
+	 * @return
+	 */
 	public SimObject getObject(String name) {
-		for(SimObject o : objects) {
-			if(o.name.equals(name)){
+		for (SimObject o : objects) {
+			if (o.name.equals(name)) {
 				return o;
 			}
 		}
 		return null;
 	}
 
+	/**
+	 * Get a list of objects from a .csv file
+	 * @param filePath
+	 * @return
+	 */
 	public ArrayList<SimObject> getObjects(String filePath) {
 		BufferedReader brBodies = null;
 
@@ -112,7 +133,7 @@ public class SystemLoader {
 	}
 
 	private void loadBody(String[] column) {
-		//int id = Integer.parseInt(column[0]);
+		// int id = Integer.parseInt(column[0]);
 		String name = column[1];
 		double mass = Double.parseDouble(column[3]);
 		double radius = Double.parseDouble(column[4]);

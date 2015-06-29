@@ -16,6 +16,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class ScenarioFactory {
+	/**
+	 * Create a new, blank scenario file
+	 * 
+	 * @param scenarioFilePath
+	 * @return the same scenario file path, for convenience
+	 */
 	public static String newScenario(String scenarioFilePath) {
 		try {
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory

@@ -25,10 +25,11 @@ public class Simulation {
 	private SimObject focus;
 	public SolarSystem solarSystem;
 	private ScenarioLoader loader;
-	
+	public Screen screen;
+
 	public String rootFilePath;
 	public double simSpeed;
-	
+
 	public Simulation() {
 		try {
 			File jarFile = new File(getClass().getProtectionDomain()
@@ -41,25 +42,25 @@ public class Simulation {
 
 	public void start() {
 		solarSystem = new SolarSystem(this);
-		
-		loader = new ScenarioLoader(this, rootFilePath + "/res/fullScenario.xml");
+		screen = new Screen(this);
+
+		loader = new ScenarioLoader(this, rootFilePath + "/res/scenario.xml");
 		loader.init();
-		
+
 		solarSystem.start();
 		loader.loadPlans();
-				
-//		Vector3D[] target = Astrophysics.target(
-//				new Vector3D(-6518108.3, -2403847.9, -22172.2),
-//				new Vector3D(6697475.6, 1794583.2, 0.0),
-//				new Vector3D(2604.057, -7105.717, -263.218),
-//				new Vector3D(-1962.373, 7323.674, 0.0),
-//				100.0*60.0, 3.986E14);
-//		System.out.println(target[0].magnitude());
 
-		Screen screen = new Screen(this);
+		// Vector3D[] target = Astrophysics.target(
+		// new Vector3D(-6518108.3, -2403847.9, -22172.2),
+		// new Vector3D(6697475.6, 1794583.2, 0.0),
+		// new Vector3D(2604.057, -7105.717, -263.218),
+		// new Vector3D(-1962.373, 7323.674, 0.0),
+		// 100.0*60.0, 3.986E14);
+		// System.out.println(target[0].magnitude());
+
 		screen.setRenderer(solarSystem.getRenderer());
-		screen.start();		
-		
+		screen.start();
+
 		System.out.println("exporting simulation");
 		export();
 		System.out.println("export complete");
@@ -68,7 +69,7 @@ public class Simulation {
 	}
 
 	public void setFocus(SimObject focus) {
-		if(focus != null) {
+		if (focus != null) {
 			this.focus = focus;
 		}
 	}
@@ -76,13 +77,13 @@ public class Simulation {
 	public SimObject getFocus() {
 		return focus;
 	}
-	
+
 	/**
 	 * Save all the simulation data and settings as a scenario file
 	 */
 	public void export() {
 		String filePath = rootFilePath + "/res/fullScenario.xml";
-		
+
 		// Remove contents of file
 		try {
 			PrintWriter pw = new PrintWriter(filePath);
@@ -90,26 +91,29 @@ public class Simulation {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		ScenarioEditor editor = new ScenarioEditor(ScenarioFactory.newScenario(filePath));
-		
+
+		ScenarioEditor editor = new ScenarioEditor(
+				ScenarioFactory.newScenario(filePath));
+
 		editor.setFocus(focus.name);
 		editor.setSpeed(String.valueOf(simSpeed));
 		editor.setEpoch(solarSystem.getEpoch());
-		
-		for(Source s : loader.sources) {
+		editor.setCamera(screen.camera.pitch, screen.camera.yaw,
+				screen.camera.centerDistance);
+
+		for (Source s : loader.sources) {
 			editor.addGroup(s);
 		}
-		
-		for(SimObject o : solarSystem.getObjects()) {
-			if(o instanceof Ship) {
-				if(((Ship) o).storeRaw) {
+
+		for (SimObject o : solarSystem.getObjects()) {
+			if (o instanceof Ship) {
+				if (((Ship) o).storeRaw) {
 					editor.addObject(o);
 				}
 				editor.addPlan(((Ship) o).getPlan());
 			}
 		}
-		
+
 		editor.updateFile();
 	}
 

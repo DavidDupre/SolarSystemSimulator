@@ -24,7 +24,7 @@ public class SolarSystem extends Thread {
 	private long lastTime;
 	private double simStartTimeTAI;
 	private double epochTAI = Double.NaN;
-	
+
 	public SolarSystem(Simulation sim) {
 		renderer = new SolarSystemRenderer();
 		objects = new ArrayList<SimObject>();
@@ -32,23 +32,38 @@ public class SolarSystem extends Thread {
 	}
 
 	/**
-	 * Get the current epoch in TAI seconds for the solar system. Don't use this
-	 * before calling start()!
-	 * 
-	 * @return
+	 * @return the current epoch in TAI seconds for the solar system
 	 */
 	public double getEpoch() {
 		return epochTAI;
 	}
-	
+
+	/**
+	 * @param epoch
+	 *            The epoch in TAI time
+	 */
 	public void setEpoch(double epoch) {
 		this.epochTAI = epoch;
 	}
-	
+
+	/**
+	 * @param jd
+	 *            The epoch as a julian date
+	 */
 	public void setEpochJD(double jd) {
 		setEpoch(Time.jdToTAI(jd));
 	}
-	
+
+	/**
+	 * Set the epoch as a date from the gregorian calendar
+	 * 
+	 * @param yr
+	 * @param mo
+	 * @param d
+	 * @param h
+	 * @param min
+	 * @param s
+	 */
 	public void setEpoch(int yr, int mo, int d, int h, int min, double s) {
 		setEpoch(Time.jdToTAI(Time.getJulianDate(yr, mo, d, h, min, s)));
 	}
@@ -56,7 +71,7 @@ public class SolarSystem extends Thread {
 	@Override
 	public void run() {
 		lastTime = System.currentTimeMillis();
-		if(Double.isNaN(epochTAI)) {
+		if (Double.isNaN(epochTAI)) {
 			epochTAI = simStartTimeTAI;
 		}
 		while (true) {
@@ -80,11 +95,13 @@ public class SolarSystem extends Thread {
 				updateEpoch();
 				o.updateTo(epochTAI);
 			}
-//			System.out.println("physics fps: " + (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
-//			System.out.println("Current epoch: " + Time.getJulianDate((long) (1000 * epochTAI)));
+			// System.out.println("physics fps: " +
+			// (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
+			// System.out.println("Current epoch: " + Time.getJulianDate((long)
+			// (1000 * epochTAI)));
 		}
 	}
-	
+
 	private void updateEpoch() {
 		double delta = getDeltaTime() / 1000.0;
 		delta *= sim.simSpeed;
@@ -107,11 +124,11 @@ public class SolarSystem extends Thread {
 	}
 
 	public void addObjects(ArrayList<SimObject> objects) {
-		if(objects != null) {
+		if (objects != null) {
 			this.objects.addAll(objects);
 		}
 	}
-	
+
 	/**
 	 * @param name
 	 * @return The first object with the given name
@@ -124,10 +141,16 @@ public class SolarSystem extends Thread {
 		}
 		return null;
 	}
-	
+
+	/**
+	 * Remove an object from the solar system list and from its parent's list of
+	 * children. If the object has children, they will be removed too.
+	 * 
+	 * @param object
+	 */
 	public void removeObject(SimObject object) {
 		objects.remove(object);
-		if(object instanceof Body) {
+		if (object instanceof Body) {
 			objects.removeAll(((Body) object).getChildren());
 		}
 		object.parent.getChildren().remove(object);
@@ -155,6 +178,9 @@ public class SolarSystem extends Thread {
 				parent = parent.parent;
 			}
 
+			/*
+			 * TODO find a better way for object-specific settings
+			 */
 			for (SimObject o : updateObjects) {
 				if (o instanceof Ship) {
 					o.render(RenderDetail.MAX);

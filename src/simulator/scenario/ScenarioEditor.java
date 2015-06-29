@@ -31,6 +31,13 @@ import simulator.simObject.Body;
 import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 
+/**
+ * 
+ * Used for reading and writing scenario XML files.
+ * 
+ * @author David
+ *
+ */
 public class ScenarioEditor {
 	protected Document doc;
 	private File xmlFile;
@@ -38,6 +45,10 @@ public class ScenarioEditor {
 	private ArrayList<Element> shipElements;
 	private ArrayList<Element> objectElements;
 
+	/**
+	 * @param scenarioFilePath
+	 *            the file path of a scenario XML file
+	 */
 	public ScenarioEditor(String scenarioFilePath) {
 		try {
 			xmlFile = new File(scenarioFilePath);
@@ -60,6 +71,21 @@ public class ScenarioEditor {
 		return (Element) doc.getElementsByTagName(key).item(0);
 	}
 
+	protected Element getCameraElement() {
+		return getElement("camera");
+	}
+
+	public void setCamera(float pitch, float yaw, float zoom) {
+		Element e = getCameraElement();
+		if (e == null) {
+			e = doc.createElement("camera");
+			doc.getDocumentElement().appendChild(e);
+		}
+		e.setAttribute("pitch", String.valueOf(pitch));
+		e.setAttribute("yaw", String.valueOf(yaw));
+		e.setAttribute("zoom", String.valueOf(zoom));
+	}
+
 	protected Element getFocusElement() {
 		return getElement("focus");
 	}
@@ -70,11 +96,11 @@ public class ScenarioEditor {
 
 	public void setFocus(String name) {
 		Element e = getFocusElement();
-		if(e == null) {
+		if (e == null) {
 			e = doc.createElement("focus");
 			doc.getDocumentElement().appendChild(e);
 		}
-		getFocusElement().setTextContent(name);
+		e.setTextContent(name);
 	}
 
 	public void setFocus(SimObject o) {
@@ -91,7 +117,7 @@ public class ScenarioEditor {
 
 	public void setSpeed(String speed) {
 		Element e = getSpeedElement();
-		if(e == null) {
+		if (e == null) {
 			e = doc.createElement("speed");
 			doc.getDocumentElement().appendChild(e);
 		}
@@ -102,6 +128,13 @@ public class ScenarioEditor {
 		return getElement("epoch");
 	}
 
+	/**
+	 * Get the epoch as stated in the XML file
+	 * 
+	 * @return a map of attributes from the epoch element. Each epoch element
+	 *         has a "type" attribute with other attributes depending on the
+	 *         type
+	 */
 	public HashMap<String, String> getEpoch() {
 		HashMap<String, String> values = new HashMap<String, String>();
 		Element e = getEpochElement();
@@ -113,6 +146,12 @@ public class ScenarioEditor {
 		return values;
 	}
 
+	/**
+	 * Set the attributes of the epoch element
+	 * 
+	 * @param values
+	 *            a map of the epoch element's attributes
+	 */
 	public void setEpoch(HashMap<String, String> values) {
 		Element e = getEpochElement();
 		for (String key : values.keySet()) {
@@ -135,21 +174,21 @@ public class ScenarioEditor {
 		setEpoch(String.valueOf(yr), String.valueOf(mo), String.valueOf(day),
 				String.valueOf(hr), String.valueOf(min), String.valueOf(s));
 	}
-	
+
 	public void setEpoch(double epochTAI) {
 		Element e = getEpochElement();
-		if(e == null) {
+		if (e == null) {
 			e = doc.createElement("epoch");
 			doc.getDocumentElement().appendChild(e);
 		}
-		if(e.hasAttributes()) {
+		if (e.hasAttributes()) {
 			NamedNodeMap attr = e.getAttributes();
 			int length = attr.getLength();
 			Node[] toRemove = new Node[length];
-			for(int i=0; i<length; i++) {
+			for (int i = 0; i < length; i++) {
 				toRemove[i] = attr.item(i);
 			}
-			for(int i=0; i<length; i++) {
+			for (int i = 0; i < length; i++) {
 				e.removeAttributeNode((Attr) toRemove[i]);
 			}
 		}
@@ -204,11 +243,16 @@ public class ScenarioEditor {
 		}
 		return shipElements;
 	}
-	
+
 	protected NodeList getPlanNodes() {
 		return doc.getElementsByTagName("plan");
 	}
 
+	/**
+	 * Add a group of simulation elements
+	 * 
+	 * @param source
+	 */
 	public void addGroup(Source source) {
 		Element group = doc.createElement("group");
 		for (String key : source.getArgs().keySet()) {
@@ -217,6 +261,13 @@ public class ScenarioEditor {
 		doc.getDocumentElement().appendChild(group);
 	}
 
+	/**
+	 * Add an individual simulation object. Doing so overrides any group objects
+	 * by the same name. The state of the object is stored as two vectors. It's
+	 * epoch is its last updated time.
+	 * 
+	 * @param object
+	 */
 	public void addObject(SimObject object) {
 		Element eObject = doc.createElement("object");
 		eObject.setAttribute("name", object.name);
@@ -259,7 +310,7 @@ public class ScenarioEditor {
 		eEpoch.setAttribute("type", "jd");
 		eEpoch.setAttribute("day", String.valueOf(Time
 				.getJulianDate((long) (1000 * object.lastUpdatedTime))));
-		
+
 		doc.getDocumentElement().appendChild(eObject);
 	}
 
@@ -270,7 +321,7 @@ public class ScenarioEditor {
 	 * @param plan
 	 */
 	public void addPlan(FlightPlan plan) {
-		if(!plan.getManeuvers().isEmpty()) {
+		if (!plan.getManeuvers().isEmpty()) {
 			Element e = getPlanElement(plan.ship.name);
 			if (e == null) {
 				// New element

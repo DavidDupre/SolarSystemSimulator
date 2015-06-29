@@ -3,6 +3,7 @@
 	<focus>Earth</focus>
 	<speed>2E3</speed>
 	<epoch type="gregorian" yr="2015" mo="6" d="27" h="0" min="0" s="0"></epoch>
+	<camera pitch="-127.33335" yaw="-176.0" zoom="46.238007"/>
 	<group type="body" path="/res/solarSystem.csv"></group>
 	<group type="ship" category="stations"></group>
 	<object type="ship" name="Swordfish" parent="Mars">

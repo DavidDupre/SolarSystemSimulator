@@ -741,6 +741,16 @@ public class Astrophysics {
 		return r_p;
 	}
 
+	/**
+	 * @param r_int position of intercepter
+	 * @param r_tgt position of target
+	 * @param v_int velocity of intercepter
+	 * @param v_tgt velocity of target
+	 * @param deltaT the time the transfer should take, in seconds
+	 * @param mu gravitational constant of the primary body
+	 * @return the delta-v vectors for two burns, one to be completed
+	 *         immediately and the other after time deltaT
+	 */
 	public static Vector3D[] target(Vector3D r_int, Vector3D r_tgt,
 			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu) {
 		// Propagate target
@@ -812,10 +822,10 @@ public class Astrophysics {
 
 		}
 		System.out.println();
-		
+
 		return mid;
 	}
-	
+
 	public static double anomalyToEscape(Vector3D pos, Vector3D vel, double mu,
 			double soiRadius) {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, mu);

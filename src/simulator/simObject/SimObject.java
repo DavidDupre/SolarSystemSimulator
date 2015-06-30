@@ -130,7 +130,7 @@ public abstract class SimObject {
 				} else {
 					// TODO this can be vastly optimized. Only update escapeV when the ship's orbit changes
 					
-					double timeToEscape = Astrophysics.timeToEscape(pos, vel, parent.mu, parent.soiRadius, true);
+					double timeToEscape = Astrophysics.timeToEscape(pos, vel, parent.mu, parent.soiRadius, false);
 					double timeStep = timeToEscape / orbitBuffer.length;
 					for (int i=0; i<orbitBuffer.length; i++) {
 						Vector3D vertex = Astrophysics.kepler(pos, vel, parent.mu, timeStep*i)[0];

@@ -24,7 +24,5 @@ Bugs:
 	- hyperbolas are ugly
 		- fix by finding the true anomaly of escape
 		- or time of escape
-		
-Code quality:
-	- Comment the code
-	- Put it on github
+	- using lastUpdateTime for burn times is probably bad?
+	- target transfers are super inconsistent

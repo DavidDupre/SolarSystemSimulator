@@ -1,7 +1,9 @@
 package simulator.plans;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import simulator.Simulation;
 import simulator.plans.Burn.Command;
 
 public class WaitCommand extends Maneuver {
@@ -13,8 +15,18 @@ public class WaitCommand extends Maneuver {
 	 * @param waitTime
 	 */
 	public WaitCommand(double waitTime) {
-		burns = new ArrayList<Burn>();
 		this.waitTime = waitTime;
+		
+		burns = new ArrayList<Burn>();
+		inputs = new HashMap<String, String>();
+		inputs.put("time", String.valueOf(waitTime));
+	}
+	
+	public WaitCommand(Simulation sim, HashMap<String, String> args) {
+		waitTime = Double.parseDouble(args.get("time"));
+		
+		burns = new ArrayList<Burn>();
+		inputs = args;
 	}
 
 	@Override

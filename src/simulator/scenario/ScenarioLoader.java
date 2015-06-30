@@ -183,15 +183,17 @@ public class ScenarioLoader {
 				break;
 			}
 
-			double epoch = 0; // in julian date
+			double epoch = Double.NaN; // in julian date
 			Element eEpoch = (Element) e.getElementsByTagName("epoch").item(0);
-			switch (eEpoch.getAttribute("type")) {
-			case "jd":
-				epoch = Double.parseDouble(eEpoch.getAttribute("day"));
-				break;
-			case "gregorian":
-				// TODO make a decent Epoch class
-				break;
+			if(eEpoch != null) {
+				switch (eEpoch.getAttribute("type")) {
+				case "jd":
+					epoch = Double.parseDouble(eEpoch.getAttribute("day"));
+					break;
+				case "gregorian":
+					// TODO make a decent Epoch class
+					break;
+				}
 			}
 
 			SimObject object = null;
@@ -249,7 +251,7 @@ public class ScenarioLoader {
 					Node n = argNodes.item(k).getAttributes().item(0);
 					args.put(n.getNodeName(), n.getNodeValue());
 				}
-				ship.addManeuver(factory.createNewManeuver(type, args));
+				ship.addManeuver(factory.createNewManeuver(sim, type, args));
 			}
 		}
 	}

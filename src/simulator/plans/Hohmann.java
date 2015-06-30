@@ -3,6 +3,7 @@ package simulator.plans;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
 import simulator.astro.Vector3D;
@@ -28,15 +29,15 @@ public class Hohmann extends Maneuver {
 	public Hohmann(double rFinal) {
 		this.rFinal = rFinal;
 		burns = new ArrayList<Burn>();
-		
+
 		inputs = new HashMap<String, String>();
 		inputs.put("r", String.valueOf(rFinal));
 	}
-	
-	public Hohmann(HashMap<String, String> args) {
+
+	public Hohmann(Simulation sim, HashMap<String, String> args) {
 		this.rFinal = Double.parseDouble((String) args.values().toArray()[0]);
 		burns = new ArrayList<Burn>();
-		
+
 		inputs = args;
 	}
 

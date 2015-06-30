@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<scenerio>
+	<!-- Test case for targeting from page 478 -->
+	<focus>test1</focus>
+	<speed>1E3</speed>
+	<camera pitch="-127.33335" yaw="-176.0" zoom="46.238007"/>
+	<group type="body" path="/res/solarSystem.csv"></group>
+	<object name="test1" parent="Earth" type="ship">
+		<state type="vector">
+			<pos x="5328786.2" y="4436127.3" z="101472.0"/>
+			<vel x="-4864.779" y="5816.486" z="240.163"/>
+		</state>
+	</object>
+	<object name="test2" parent="Earth" type="ship">
+		<state type="vector">
+			<pos x="6697475.6" y="1794583.1" z="0"/>
+			<vel x="-1962.372" y="7323.674" z="0"/>
+		</state>
+	</object>
+	<plan name="test1">
+		<command type="Target">
+			<param target="test2"></param>
+		</command>
+	</plan>
+</scenerio>

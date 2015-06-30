@@ -59,7 +59,7 @@ public class Ship extends SimObject {
 		pos = state[0];
 		vel = state[1];
 		double now = System.currentTimeMillis() / 1000.0;
-		if (Simulation.REAL_TIME) {
+		if (Simulation.REAL_TIME && !Double.isNaN(epoch)) {
 			lastUpdatedTime = Time.jdToTAI(epoch);
 		} else {
 			lastUpdatedTime = now;

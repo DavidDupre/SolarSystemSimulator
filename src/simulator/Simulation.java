@@ -44,19 +44,12 @@ public class Simulation {
 		solarSystem = new SolarSystem(this);
 		screen = new Screen(this);
 
-		loader = new ScenarioLoader(this, rootFilePath + "/res/scenario.xml");
+		loader = new ScenarioLoader(this, rootFilePath
+				+ "/res/targetScenario2.xml");
 		loader.init();
 
 		solarSystem.start();
 		loader.loadPlans();
-
-		// Vector3D[] target = Astrophysics.target(
-		// new Vector3D(-6518108.3, -2403847.9, -22172.2),
-		// new Vector3D(6697475.6, 1794583.2, 0.0),
-		// new Vector3D(2604.057, -7105.717, -263.218),
-		// new Vector3D(-1962.373, 7323.674, 0.0),
-		// 100.0*60.0, 3.986E14);
-		// System.out.println(target[0].magnitude());
 
 		screen.setRenderer(solarSystem.getRenderer());
 		screen.start();

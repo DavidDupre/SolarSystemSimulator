@@ -1,6 +1,6 @@
 package simulator.astro;
 
-import simulator.simObject.Ship;
+import simulator.simObject.SimObject;
 
 public class Astrophysics {
 	public static/* The one and only D O */double G = 6.67384E-11;
@@ -685,14 +685,13 @@ public class Astrophysics {
 			}
 
 			if ((loops >= numiter) || (ynegktr >= 10)) {
-				System.out.println("loops: " + loops);
-				System.out.println("gnotconv");
-				if (ynegktr >= 10) {
-					System.out.println("y negative");
-				}
-				Exception e = new Exception();
-				e.printStackTrace();
-				System.exit(1);
+//				System.out.println("loops: " + loops);
+//				System.out.println("gnotconv");
+//				if (ynegktr >= 10) {
+//					System.out.println("y negative");
+//				}
+//				Exception e = new Exception();
+//				e.printStackTrace();
 			} else {
 				/* ---- use f and g series to find velocity vectors ----- */
 				f = 1.0 - y / roMag;
@@ -742,24 +741,33 @@ public class Astrophysics {
 	}
 
 	/**
-	 * @param r_int position of intercepter
-	 * @param r_tgt position of target
-	 * @param v_int velocity of intercepter
-	 * @param v_tgt velocity of target
-	 * @param deltaT the time the transfer should take, in seconds
-	 * @param mu gravitational constant of the primary body
+	 * @param r_int
+	 *            position of intercepter
+	 * @param r_tgt
+	 *            position of target
+	 * @param v_int
+	 *            velocity of intercepter
+	 * @param v_tgt
+	 *            velocity of target
+	 * @param deltaT
+	 *            the time the transfer should take, in seconds
+	 * @param mu
+	 *            gravitational constant of the primary body
 	 * @return the delta-v vectors for two burns, one to be completed
 	 *         immediately and the other after time deltaT
 	 */
 	public static Vector3D[] target(Vector3D r_int, Vector3D r_tgt,
-			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu) {
+			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu, boolean useLongWay) {
 		// Propagate target
 		Vector3D[] state = kepler(r_tgt, v_tgt, mu, deltaT);
 		Vector3D r_tgtB = state[0];
 		Vector3D v_tgtB = state[1];
 
 		// Determine tranfer orbit
-		Vector3D[] trans = lambert(r_int, r_tgtB, false, false, deltaT, mu);
+		Vector3D[] trans = lambert(r_int, r_tgtB, useLongWay, true, deltaT, mu);
+		if (trans == null) {
+			return null;
+		}
 		Vector3D v_transA = trans[0];
 		Vector3D v_transB = trans[1];
 
@@ -771,9 +779,10 @@ public class Astrophysics {
 		return new Vector3D[] { deltaVA, deltaVB };
 	}
 
-	public static Vector3D[] target(Ship inter, Ship target, double deltaT) {
+	public static Vector3D[] target(SimObject inter, SimObject target,
+			double deltaT, boolean useLongWay) {
 		return target(inter.pos, target.pos, inter.vel, target.vel, deltaT,
-				inter.parent.mu);
+				inter.parent.mu, useLongWay);
 	}
 
 	public static double timeToEscape(Vector3D pos, Vector3D vel, double mu,
@@ -807,7 +816,7 @@ public class Astrophysics {
 		while (Math.abs(dif) > tolerance && iterations < 100) {
 			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
 			double r = futureState[0].magnitude();
-			System.out.println("r: " + r);
+//			System.out.println("r: " + r);
 
 			dif = r - soiRadius;
 
@@ -821,7 +830,7 @@ public class Astrophysics {
 			iterations++;
 
 		}
-		System.out.println();
+//		System.out.println();
 
 		return mid;
 	}

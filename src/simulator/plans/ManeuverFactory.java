@@ -4,6 +4,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
+import simulator.Simulation;
+
 /**
  * Utility class to work with scenario files
  * 
@@ -19,11 +21,12 @@ public class ManeuverFactory {
 		classMap = new HashMap<String, Class>();
 		classMap.put("Incline", Incline.class);
 		classMap.put("Hohmann", Hohmann.class);
-		classMap.put("Wait", WaitCommand.class);
+		classMap.put("WaitCommand", WaitCommand.class);
 		classMap.put("Bielliptic", Bielliptic.class);
 		classMap.put("OneTangent", OneTangent.class);
 		classMap.put("Circularize", Circularize.class);
 		classMap.put("Direct", Direct.class);
+		classMap.put("Target", Target.class);
 	}
 
 	/**
@@ -37,14 +40,15 @@ public class ManeuverFactory {
 	 *            the parameters for the sub-class constructor
 	 * @return new maneuver
 	 */
-	public Maneuver createNewManeuver(String type, HashMap<String, String> args) {
+	public Maneuver createNewManeuver(Simulation sim, String type,
+			HashMap<String, String> args) {
 		Maneuver m = null;
 		try {
 			Class c = classMap.get(type);
 			// TODO fix this next line. InvocationTargetException
-			Constructor constructor = c
-					.getConstructor(new HashMap<String, String>().getClass());
-			m = (Maneuver) constructor.newInstance((Object) args);
+			Constructor constructor = c.getConstructor(Simulation.class,
+					new HashMap<String, String>().getClass());
+			m = (Maneuver) constructor.newInstance(sim, (Object) args);
 		} catch (InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e) {
 			// TODO Auto-generated catch block

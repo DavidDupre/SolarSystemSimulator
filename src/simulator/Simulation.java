@@ -49,7 +49,6 @@ public class Simulation {
 		loader.init();
 
 		solarSystem.start();
-		loader.loadPlans();
 
 		screen.setRenderer(solarSystem.getRenderer());
 		screen.start();

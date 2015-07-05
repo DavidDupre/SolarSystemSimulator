@@ -190,13 +190,13 @@ public abstract class SimObject {
 	}
 	
 	public void superLock(boolean doLock) {
+		if(parent != null) {
+			parent.superLock(doLock);
+		}
 		if(doLock) {
 			lock.lock();
 		} else {
 			lock.unlock();
-		}
-		if(parent != null) {
-			parent.superLock(doLock);
 		}
 	}
 }

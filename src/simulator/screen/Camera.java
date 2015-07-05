@@ -109,6 +109,12 @@ public class Camera {
 								}
 								sim.setFocus(sim.solarSystem.getObjects().get(focusIndex));
 								break;
+							case Keyboard.KEY_COMMA:
+								sim.simSpeed *= .5;
+								break;
+							case Keyboard.KEY_PERIOD:
+								sim.simSpeed *= 2.0;
+								break;
 							}
 						}
 					}

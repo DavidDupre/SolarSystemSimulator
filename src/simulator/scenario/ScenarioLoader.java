@@ -111,6 +111,11 @@ public class ScenarioLoader {
 			float zoom = Float.parseFloat(eCam.getAttribute("zoom"));
 			sim.screen.camera.set(pitch, yaw, zoom);
 		}
+		
+		/*
+		 * Load flight plans
+		 */
+		loadPlans();
 	}
 
 	private void loadEpoch() {

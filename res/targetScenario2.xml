@@ -5,18 +5,15 @@
 	<camera pitch="-127.33335" yaw="-176.0" zoom="46.238007"/>
 	<group type="body" path="/res/solarSystem.csv"></group>
 	<object name="test1" parent="Earth" type="ship">
-		<state type="orbit" a="1E7" i="50" e="0" peri="0" node="0" v="0"></state>
+		<state type="orbit" a="9E6" i="0" e="0" peri="0" node="0" v="120"></state>
 	</object>
 	<object name="test2" parent="Earth" type="ship">
 		<state type="orbit" a="1.2E7" i="20" e="0.1" peri="20" node="0" v="60"></state>
 	</object>
 	<plan name="test1">
-		<command type="WaitCommand">
-			<param time="3000"></param>
-		</command>
 		<command type="Target">
-			<param target="test2"></param>
-			<param deltaT="3000"></param>
+			<param target="Moon"></param>
+			<param delay="one_orbit"></param>
 		</command>
 	</plan>
 </scenerio>

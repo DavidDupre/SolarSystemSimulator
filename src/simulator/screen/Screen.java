@@ -46,7 +46,7 @@ public class Screen {
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST); // Enables Depth Testing
 		glDepthFunc(GL_LEQUAL); // The Type Of Depth Test To Do
-		glPointSize(5); // Changes point size to 2 pixels
+		glPointSize(5); // Changes point size to 5 pixels
 		// TODO pls no hardcoderino
 	}
 

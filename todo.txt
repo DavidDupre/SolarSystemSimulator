@@ -1,6 +1,7 @@
 Optimizations:
 	- use KeplerCOE
 	- Canonical units
+	- move the input stuff out of camera
 	
 Features:
 	- GUI
@@ -15,6 +16,10 @@ Features:
 	- Library of maneuvers
 	- Record delta-v expenditures. Sum for flight plans
 	- Parent-child heirarchy shouldn't depend on when you load the objects
+	- Collision detection
+		- Periodically use Astrophysics.hitEarth() on orbit to detect collision.
+		- When detected, calculate time to collision
+		- Create new, secret maneuver for crashing with a burn that destroys the ship
 	
 Bugs:
 	- Neptune escaped satellite at high speeds
@@ -25,4 +30,5 @@ Bugs:
 		- fix by finding the true anomaly of escape
 		- or time of escape
 	- using lastUpdateTime for burn times is probably bad?
-	- target transfers are super inconsistent
+	- tune target transfers for interplanetary (eventually)
+	- target doesn't work for moon transfer sometimes

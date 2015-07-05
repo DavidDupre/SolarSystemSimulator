@@ -685,13 +685,13 @@ public class Astrophysics {
 			}
 
 			if ((loops >= numiter) || (ynegktr >= 10)) {
-//				System.out.println("loops: " + loops);
-//				System.out.println("gnotconv");
-//				if (ynegktr >= 10) {
-//					System.out.println("y negative");
-//				}
-//				Exception e = new Exception();
-//				e.printStackTrace();
+				// System.out.println("loops: " + loops);
+				// System.out.println("gnotconv");
+				// if (ynegktr >= 10) {
+				// System.out.println("y negative");
+				// }
+				// Exception e = new Exception();
+				// e.printStackTrace();
 			} else {
 				/* ---- use f and g series to find velocity vectors ----- */
 				f = 1.0 - y / roMag;
@@ -757,7 +757,8 @@ public class Astrophysics {
 	 *         immediately and the other after time deltaT
 	 */
 	public static Vector3D[] target(Vector3D r_int, Vector3D r_tgt,
-			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu, boolean useLongWay) {
+			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu,
+			boolean useLongWay) {
 		// Propagate target
 		Vector3D[] state = kepler(r_tgt, v_tgt, mu, deltaT);
 		Vector3D r_tgtB = state[0];
@@ -783,6 +784,12 @@ public class Astrophysics {
 			double deltaT, boolean useLongWay) {
 		return target(inter.pos, target.pos, inter.vel, target.vel, deltaT,
 				inter.parent.mu, useLongWay);
+	}
+
+	public static Vector3D[] target(Vector3D[] state_int, Vector3D[] state_tgt,
+			double mu, double deltaT, boolean useLongWay) {
+		return target(state_int[0], state_tgt[0], state_int[1], state_tgt[1],
+				deltaT, mu, useLongWay);
 	}
 
 	public static double timeToEscape(Vector3D pos, Vector3D vel, double mu,
@@ -816,7 +823,7 @@ public class Astrophysics {
 		while (Math.abs(dif) > tolerance && iterations < 100) {
 			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
 			double r = futureState[0].magnitude();
-//			System.out.println("r: " + r);
+			// System.out.println("r: " + r);
 
 			dif = r - soiRadius;
 
@@ -830,7 +837,7 @@ public class Astrophysics {
 			iterations++;
 
 		}
-//		System.out.println();
+		// System.out.println();
 
 		return mid;
 	}

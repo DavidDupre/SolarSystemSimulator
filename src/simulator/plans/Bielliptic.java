@@ -2,7 +2,9 @@ package simulator.plans;
 
 import java.util.ArrayList;
 
-import simulator.astro.Vector3D;
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 import simulator.plans.Burn.Command;
 
 public class Bielliptic extends Maneuver {
@@ -54,7 +56,7 @@ public class Bielliptic extends Maneuver {
 		burns.add(new Burn(ship.lastUpdatedTime, new Command() {
 			@Override
 			public void run() {
-				Vector3D delta = ship.vel.clone().normalize().multiply(deltaVA);
+				Vector delta = ((VectorND) ship.vel).clone().normalize().multiply(deltaVA);
 				ship.vel.add(delta);
 			}
 		}));
@@ -62,7 +64,7 @@ public class Bielliptic extends Maneuver {
 		burns.add(new Burn(ship.lastUpdatedTime + tTrans1, new Command() {
 			@Override
 			public void run() {
-				Vector3D delta = ship.vel.clone().normalize().multiply(deltaVB);
+				Vector delta = ((VectorND) ship.vel).clone().normalize().multiply(deltaVB);
 				ship.vel.add(delta);
 			}
 		}));
@@ -71,7 +73,7 @@ public class Bielliptic extends Maneuver {
 				new Command() {
 					@Override
 					public void run() {
-						Vector3D delta = ship.vel.clone().normalize()
+						Vector delta = ((VectorND) ship.vel).clone().normalize()
 								.multiply(deltaVC);
 						ship.vel.add(delta);
 					}

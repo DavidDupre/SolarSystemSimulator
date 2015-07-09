@@ -9,7 +9,9 @@ import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
 import simulator.astro.Time;
-import simulator.astro.Vector3D;
+
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
 
 public class Body extends SimObject {
 	/**
@@ -42,8 +44,8 @@ public class Body extends SimObject {
 		radius = 1.0;
 		mu = Astrophysics.G;
 		mass = 1.0;
-		pos = new Vector3D();
-		vel = new Vector3D();
+		pos = new VectorND(0,0,0);
+		vel = new VectorND(0,0,0);
 		name = "null";
 		children = new ArrayList<SimObject>();
 	}
@@ -71,13 +73,13 @@ public class Body extends SimObject {
 		this.orb = orb;
 		if (parent != null) {
 			setParent(parent);
-			Vector3D[] state = Astrophysics.toRV(orb, parent.mu, true);
+			Vector[] state = Astrophysics.toRV(orb, parent.mu, true);
 			pos = state[0];
 			vel = state[1];
 			soiRadius = orb.a * Math.pow(mass / parent.mass, 2.0 / 5.0);
 		} else {
-			pos = new Vector3D();
-			vel = new Vector3D();
+			pos = new VectorND(0,0,0);
+			vel = new VectorND(0,0,0);
 			soiRadius = Double.MAX_VALUE;
 		}
 
@@ -91,7 +93,7 @@ public class Body extends SimObject {
 	}
 	
 	public Body(String name, Body parent, double mass, double radius,
-			Vector3D[] state, double epoch) {
+			Vector[] state, double epoch) {
 		color = new float[] { 1.0f, 1.0f, 1.0f };
 		lock = new ReentrantLock();
 		sphere = new Sphere();

@@ -5,10 +5,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Time;
-import simulator.astro.Vector3D;
 import simulator.plans.FlightPlan;
 import simulator.plans.Maneuver;
 import simulator.tle.TLE;
+
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
 
 public class Ship extends SimObject {
 
@@ -28,7 +30,7 @@ public class Ship extends SimObject {
 		name = tle.name;
 		setParent(parent);
 		this.orb = tle.getOrbit();
-		Vector3D[] state = Astrophysics.toRV(orb, parent.mu, false);
+		Vector[] state = Astrophysics.toRV(orb, parent.mu, false);
 		pos = state[0];
 		vel = state[1];
 		double now = System.currentTimeMillis() / 1000.0;
@@ -48,7 +50,7 @@ public class Ship extends SimObject {
 	 * @param epoch
 	 *            Epoch in julian date
 	 */
-	public Ship(String name, Vector3D[] state, Body parent, double epoch) {
+	public Ship(String name, Vector[] state, Body parent, double epoch) {
 		color = new float[] { 1.0f, .2f, .2f };
 		lock = new ReentrantLock();
 		plan = new FlightPlan(this);
@@ -99,7 +101,7 @@ public class Ship extends SimObject {
 				SimObject o = parent.children.get(i);
 				if (o instanceof Body) {
 					Body b = (Body) o;
-					if (pos.clone().subtract(b.pos).magnitude() < b.soiRadius) {
+					if (((VectorND)pos).clone().subtract(b.pos).magnitude() < b.soiRadius) {
 						System.out.println(name + " is in the SOI of " + b.name
 								+ "!");
 						setParent(b);

@@ -1,19 +1,24 @@
 package simulator.screen;
 
+import static org.lwjgl.opengl.GL11.glRotated;
+import static org.lwjgl.opengl.GL11.glScaled;
+import static org.lwjgl.opengl.GL11.glTranslated;
+
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
-import static org.lwjgl.opengl.GL11.*;
 import simulator.Simulation;
-import simulator.astro.Vector3D;
+
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
 
 public class Camera {
 	public float centerDistance;
 	public float pitch;
 	public float yaw;
 	private double scale;
-	private Vector3D pos;
+	private Vector pos;
 	private InputThread input;
 	private Simulation sim;
 	
@@ -27,7 +32,7 @@ public class Camera {
 		pitch = -120f;
 		yaw = 0f;
 		scale = 1.0;
-		pos = new Vector3D();
+		pos = new VectorND(0,0,0);
 	}
 	
 	/**
@@ -42,7 +47,7 @@ public class Camera {
 	 * 
 	 * @param pos
 	 */
-	public void lookAt(Vector3D pos) {
+	public void lookAt(Vector pos) {
 		this.pos = pos;
 	}
 
@@ -55,7 +60,7 @@ public class Camera {
 		glRotated(yaw, 0, 0, 1);
 		glScaled(scale, scale, scale);
 
-		glTranslated(-pos.x, -pos.y, -pos.z);
+		glTranslated(-pos.get(0), -pos.get(1), -pos.get(2));
 	}
 	
 	public void setScale(double scale) {

@@ -6,9 +6,11 @@ import java.util.HashMap;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
-import simulator.astro.Vector3D;
 import simulator.plans.Burn.Command;
 import simulator.simObject.SimObject;
+
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
 
 /**
  * 
@@ -17,7 +19,7 @@ import simulator.simObject.SimObject;
  */
 public class Target extends Maneuver {
 	private SimObject target;
-	private Vector3D[] minChanges;
+	private Vector[] minChanges;
 	private DelayType delayType;
 
 	public enum DelayType {
@@ -81,29 +83,31 @@ public class Target extends Maneuver {
 		/*
 		 * Calculate future state vectors after delay
 		 */
-		Vector3D[] fState_int;
-		Vector3D[] fState_tgt;
+		Vector[] fState_int;
+		Vector[] fState_tgt;
 		if (delay > 0) {
 			fState_int = Astrophysics.kepler(ship.pos, ship.vel,
 					ship.parent.mu, delay);
 			fState_tgt = Astrophysics.kepler(target.pos, target.vel,
 					target.parent.mu, delay);
 		} else {
-			fState_int = new Vector3D[] { ship.pos, ship.vel };
-			fState_tgt = new Vector3D[] { target.pos, target.vel };
+			fState_int = new Vector[] { ship.pos, ship.vel };
+			fState_tgt = new Vector[] { target.pos, target.vel };
 		}
 
 		/*
 		 * Determine if using long way
 		 */
-		Vector3D tran_n = Vector3D.crossProduct(fState_int[0], fState_tgt[0]);
-		Vector3D h_n = Vector3D.crossProduct(fState_int[0], fState_int[1]);
-		boolean useLongWay = Vector3D.dotProduct(h_n, tran_n) < 0;
+		Vector tran_n = new VectorND(0,0,0);
+		tran_n = Vector.crossProduct(tran_n, fState_int[0], fState_tgt[0]);
+		Vector h_n = new VectorND(0,0,0);
+		h_n = Vector.crossProduct(h_n, fState_int[0], fState_int[1]);
+		boolean useLongWay = Vector.dotProduct(h_n, tran_n) < 0;
 
 		/*
 		 * Plot the possible transfer times and look for a minimum
 		 */
-		Vector3D[] changes = new Vector3D[2];
+		Vector[] changes = new Vector[2];
 		double minDeltaV = Double.MAX_VALUE;
 		double timeOfMin = 0;
 		for (int i = 0; i < sampleSize; i++) {
@@ -176,7 +180,7 @@ public class Target extends Maneuver {
 		}
 
 		double minDeltaV = Double.MAX_VALUE;
-		Vector3D[] realMinChanges = new Vector3D[2];
+		Vector[] realMinChanges = new Vector[2];
 		double timeOfMinOfMin = 0;
 		double minDelay = 0;
 		int sampleSize = maxDelay > 0 ? 100 : 1;
@@ -193,8 +197,8 @@ public class Target extends Maneuver {
 			}
 		}
 
-		final Vector3D deltaVA = realMinChanges[0];
-		final Vector3D deltaVB = realMinChanges[1];
+		final Vector deltaVA = realMinChanges[0];
+		final Vector deltaVB = realMinChanges[1];
 
 		this.deltaV = deltaVA.magnitude() + deltaVB.magnitude();
 

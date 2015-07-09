@@ -1,5 +1,8 @@
 package simulator.astro;
 
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 import simulator.simObject.SimObject;
 
 public class Astrophysics {
@@ -17,10 +20,10 @@ public class Astrophysics {
 	 *            - gravitational parameter of primary
 	 * @return
 	 */
-	public static Vector3D dVToCircularize(double r, Vector3D v, double mu) {
+	public static Vector dVToCircularize(double r, Vector v, double mu) {
 		double vCircMag = Math.sqrt(mu / r);
-		Vector3D vCircVector = v.clone().normalize().multiply(vCircMag);
-		Vector3D deltaV = vCircVector.subtract(v);
+		Vector vCircVector = ((VectorND) v).clone().normalize().multiply(vCircMag);
+		Vector deltaV = vCircVector.subtract(v);
 		return deltaV;
 	}
 
@@ -46,7 +49,7 @@ public class Astrophysics {
 	 * @param useDegrees
 	 * @return index 0 = position; index 1 = velocity
 	 */
-	public static Vector3D[] toRV(Orbit orb, double mu, boolean useDegrees) {
+	public static Vector[] toRV(Orbit orb, double mu, boolean useDegrees) {
 		return toRV(orb.a, orb.e, orb.i, orb.node, orb.peri, orb.v, mu,
 				useDegrees);
 	}
@@ -72,7 +75,7 @@ public class Astrophysics {
 	 * @param useDegrees
 	 * @return index 0 = position; index 1 = velocity
 	 */
-	public static Vector3D[] toRV(double a, double e, double i, double node,
+	public static Vector[] toRV(double a, double e, double i, double node,
 			double peri, double v, double mu, boolean useDegrees) {
 		double p = getSemiParameter(a, e);
 
@@ -117,9 +120,9 @@ public class Astrophysics {
 		Matrix rIJK = Matrix.multiply(trans, rPQW);
 		Matrix vIJK = Matrix.multiply(trans, vPQW);
 
-		Vector3D[] state = new Vector3D[2];
-		state[0] = new Vector3D(rIJK.get(0, 0), rIJK.get(1, 0), rIJK.get(2, 0));
-		state[1] = new Vector3D(vIJK.get(0, 0), vIJK.get(1, 0), vIJK.get(2, 0));
+		Vector[] state = new Vector[2];
+		state[0] = new VectorND(rIJK.get(0, 0), rIJK.get(1, 0), rIJK.get(2, 0));
+		state[1] = new VectorND(vIJK.get(0, 0), vIJK.get(1, 0), vIJK.get(2, 0));
 		return state;
 	}
 
@@ -135,27 +138,29 @@ public class Astrophysics {
 	 *            - gravitational parameter of primary
 	 * @return
 	 */
-	public static Orbit toOrbitalElements(Vector3D r, Vector3D v, double mu) {
+	public static Orbit toOrbitalElements(Vector r, Vector v, double mu) {
 		/* Prevent sneaky divide by zero errors */
-		if (r.z == 0) {
-			r.z = 1E-10;
+		if (r.get(2) == 0) {
+			r.set(2, 1E-10);
 		}
 
 		double rMag = r.magnitude();
 		double vMag = v.magnitude();
-		double rDotV = Vector3D.dotProduct(r, v);
+		double rDotV = Vector.dotProduct(r, v);
 		double twoPi = 2 * Math.PI;
 
 		// Find specific angular momentum
-		Vector3D h = Vector3D.crossProduct(r, v);
+		Vector h = new VectorND(0,0,0);
+		h = Vector.crossProduct(h, r, v);
 
 		// Find the node vector
-		Vector3D k = new Vector3D(0, 0, 1.0);
-		Vector3D n = Vector3D.crossProduct(k, h);
+		Vector k = new VectorND(0, 0, 1.0);
+		Vector n = new VectorND(0,0,0);
+		n = Vector.crossProduct(n, k, h);
 		double nMag = n.magnitude(); // nMag being 0 screws thing up
 
-		Vector3D e = ((r.clone().multiply(vMag * vMag - (mu / rMag)))
-				.subtract(v.clone().multiply(rDotV))).multiply(1.0 / mu);
+		Vector e = ((((VectorND) r).clone().multiply(vMag * vMag - (mu / rMag)))
+				.subtract(((VectorND) v).clone().multiply(rDotV))).multiply(1.0 / mu);
 		double eMag = e.magnitude();
 
 		double sguig = vMag * vMag / 2.0 - mu / rMag;
@@ -164,19 +169,19 @@ public class Astrophysics {
 		double a = -mu / (2.0 * sguig);
 		double p = a * (1.0 - eMag * eMag);
 
-		double i = Math.acos(h.z / h.magnitude());
+		double i = Math.acos(h.get(2) / h.magnitude());
 
-		double node = Math.acos(n.x / nMag);
-		if (n.y < 0) {
+		double node = Math.acos(n.get(0) / nMag);
+		if (n.get(1) < 0) {
 			node = twoPi - node;
 		}
 
-		double peri = Math.acos(Vector3D.dotProduct(n, e) / (nMag * eMag));
-		if (e.z < 0) {
+		double peri = Math.acos(Vector.dotProduct(n, e) / (nMag * eMag));
+		if (e.get(2) < 0) {
 			peri = twoPi - peri;
 		}
 
-		double anomaly = Math.acos(Vector3D.dotProduct(e, r) / (eMag * rMag));
+		double anomaly = Math.acos(Vector.dotProduct(e, r) / (eMag * rMag));
 		if (rDotV < 0) {
 			anomaly = twoPi - anomaly;
 		}
@@ -197,13 +202,13 @@ public class Astrophysics {
 	 *            - gravitational parameter of parent body
 	 * @return eccentricity
 	 */
-	public static double getEccentricity(Vector3D r, Vector3D v, double mu) {
+	public static double getEccentricity(Vector r, Vector v, double mu) {
 		double rMag = r.magnitude();
 		double vMag = v.magnitude();
-		double rDotV = Vector3D.dotProduct(r, v);
+		double rDotV = Vector.dotProduct(r, v);
 
-		Vector3D e = ((r.clone().multiply(vMag * vMag - (mu / rMag)))
-				.subtract(v.clone().multiply(rDotV))).multiply(1 / mu);
+		Vector e = ((((VectorND) r).clone().multiply(vMag * vMag - (mu / rMag)))
+				.subtract(((VectorND) v).clone().multiply(rDotV))).multiply(1 / mu);
 
 		return e.magnitude();
 	}
@@ -222,14 +227,14 @@ public class Astrophysics {
 	 *            Parent's gravitational parameter
 	 * @return Future state vectors
 	 */
-	public static Vector3D[] kepler(Vector3D r_0, Vector3D v_0, double mu,
+	public static Vector[] kepler(Vector r_0, Vector v_0, double mu,
 			double deltaT) {
 		double v_0mag2 = v_0.mag2();
 		double r_0mag = r_0.magnitude();
 
 		double alpha = (-v_0mag2 / mu) + (2.0 / r_0mag);
 
-		double rDotV = Vector3D.dotProduct(r_0, v_0);
+		double rDotV = Vector.dotProduct(r_0, v_0);
 		double rootGrav = Math.sqrt(mu);
 
 		double x_0;
@@ -239,7 +244,8 @@ public class Astrophysics {
 			x_0 = rootGrav * deltaT * alpha;
 		} else if (Math.abs(alpha) < parabThresh) {
 			// Parabola
-			Vector3D h = Vector3D.crossProduct(r_0, v_0);
+			Vector h = new VectorND(0,0,0);
+			h = Vector.crossProduct(h, r_0, v_0);
 			double p = h.mag2() / mu;
 			double s = Math
 					.atan2(1.0, 3 * Math.sqrt(mu / (p * p * p)) * deltaT) / 2.0;
@@ -286,11 +292,11 @@ public class Astrophysics {
 		double gDot = 1.0 - ((x_n * x_n) / r) * c2;
 		double fDot = (rootGrav / (r * r_0mag)) * x_n * (psi * c3 - 1.0);
 
-		Vector3D rVec = r_0.clone().multiply(f).add(v_0.clone().multiply(g));
-		Vector3D vVec = r_0.clone().multiply(fDot)
-				.add(v_0.clone().multiply(gDot));
+		Vector rVec = ((VectorND) r_0).clone().multiply(f).add(((VectorND)v_0).clone().multiply(g));
+		Vector vVec = ((VectorND) r_0).clone().multiply(fDot)
+				.add(((VectorND)v_0).clone().multiply(gDot));
 
-		return new Vector3D[] { rVec, vVec };
+		return new Vector[] { rVec, vVec };
 	}
 
 	/**
@@ -330,7 +336,7 @@ public class Astrophysics {
 	 *            Delta time
 	 * @return State vectors
 	 */
-	public static Vector3D[] keplerCOE(Vector3D r_0, Vector3D v_0, double mass,
+	public static Vector[] keplerCOE(Vector r_0, Vector v_0, double mass,
 			double deltaT) {
 		Orbit orb = toOrbitalElements(r_0, v_0, mass);
 
@@ -475,7 +481,7 @@ public class Astrophysics {
 	 *            - target true anomaly, in radians
 	 * @return the time, in seconds, to that true anomaly
 	 */
-	public static double timeToAnomaly(Vector3D pos, Vector3D vel, Orbit orb,
+	public static double timeToAnomaly(Vector pos, Vector vel, Orbit orb,
 			double mu, double targetV) {
 		double initSum = orb.peri + orb.v;
 
@@ -490,7 +496,7 @@ public class Astrophysics {
 		double anomDif = tolerance * 10.0;
 		int iterations = 0;
 		while (Math.abs(anomDif) > tolerance && iterations < 20) {
-			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
+			Vector[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
 			Orbit futureOrb = Astrophysics.toOrbitalElements(futureState[0],
 					futureState[1], mu);
 			double sum = futureOrb.peri + futureOrb.v;
@@ -566,7 +572,7 @@ public class Astrophysics {
 	 *
 	 -----------------------------------------------------------------------------*/
 
-	public static Vector3D[] lambert(Vector3D ro, Vector3D r,
+	public static Vector[] lambert(Vector ro, Vector r,
 			boolean useLongWay, boolean overrev, double dttu, double mu) {
 		double twopi = 2.0 * Math.PI;
 		double small = 1E-6;
@@ -580,7 +586,7 @@ public class Astrophysics {
 		/* -------------------- initialize values -------------------- */
 		psinew = 0.0;
 
-		cosdeltanu = Vector3D.dotProduct(ro, r) / (ro.magnitude() * rMag);
+		cosdeltanu = Vector.dotProduct(ro, r) / (ro.magnitude() * rMag);
 		if (useLongWay) {
 			vara = -Math.sqrt(roMag * rMag * (1.0 + cosdeltanu));
 		} else {
@@ -697,11 +703,11 @@ public class Astrophysics {
 				f = 1.0 - y / roMag;
 				gdot = 1.0 - y / rMag;
 				g = 1.0 / (vara * Math.sqrt(y / mu)); // 1 over g
-				Vector3D v_0 = r.clone().subtract(ro.clone().multiply(f))
+				Vector v_0 = ((VectorND) r).clone().subtract(((VectorND)ro).clone().multiply(f))
 						.multiply(g);
-				Vector3D v = r.clone().multiply(gdot).subtract(ro).multiply(g);
+				Vector v = ((VectorND) r).clone().multiply(gdot).subtract(ro).multiply(g);
 
-				return new Vector3D[] { v_0, v };
+				return new Vector[] { v_0, v };
 			}
 		} else {
 			System.out.println("impos 180ø");
@@ -728,11 +734,12 @@ public class Astrophysics {
 	 *         Note that a low r_p means the body is subject to aerodynamic
 	 *         perturbaterinos, which are not modeled with "kepler()"
 	 */
-	public static double hitEarth(Vector3D r_int, Vector3D r_tgt,
-			Vector3D v_transA, Vector3D v_transB, double a, double mu) {
+	public static double hitEarth(Vector r_int, Vector r_tgt,
+			Vector v_transA, Vector v_transB, double a, double mu) {
 		// if(Vector3D.dotProduct(r_int, v_transA)<0 &&
 		// Vector3D.dotProduct(r_tgt, v_transB)>0) {
-		double h_t = Vector3D.crossProduct(r_int, v_transB).magnitude();
+		Vector h = new VectorND(0,0,0);
+		double h_t = Vector.crossProduct(h, r_int, v_transB).magnitude();
 		double p = (h_t * h_t) / mu;
 		double e = Math.sqrt((a - p) / a);
 		double r_p = a * (1 - e);
@@ -756,43 +763,43 @@ public class Astrophysics {
 	 * @return the delta-v vectors for two burns, one to be completed
 	 *         immediately and the other after time deltaT
 	 */
-	public static Vector3D[] target(Vector3D r_int, Vector3D r_tgt,
-			Vector3D v_int, Vector3D v_tgt, double deltaT, double mu,
+	public static Vector[] target(Vector r_int, Vector r_tgt,
+			Vector v_int, Vector v_tgt, double deltaT, double mu,
 			boolean useLongWay) {
 		// Propagate target
-		Vector3D[] state = kepler(r_tgt, v_tgt, mu, deltaT);
-		Vector3D r_tgtB = state[0];
-		Vector3D v_tgtB = state[1];
+		Vector[] state = kepler(r_tgt, v_tgt, mu, deltaT);
+		Vector r_tgtB = state[0];
+		Vector v_tgtB = state[1];
 
 		// Determine tranfer orbit
-		Vector3D[] trans = lambert(r_int, r_tgtB, useLongWay, true, deltaT, mu);
+		Vector[] trans = lambert(r_int, r_tgtB, useLongWay, true, deltaT, mu);
 		if (trans == null) {
 			return null;
 		}
-		Vector3D v_transA = trans[0];
-		Vector3D v_transB = trans[1];
+		Vector v_transA = trans[0];
+		Vector v_transB = trans[1];
 
-		Vector3D deltaVA = v_transA.clone().subtract(v_int);
-		Vector3D deltaVB = v_tgtB.clone().subtract(v_transB);
+		Vector deltaVA = ((VectorND) v_transA).clone().subtract(v_int);
+		Vector deltaVB = ((VectorND) v_tgtB).clone().subtract(v_transB);
 
 		// Check for Earth impact TODO
 
-		return new Vector3D[] { deltaVA, deltaVB };
+		return new Vector[] { deltaVA, deltaVB };
 	}
 
-	public static Vector3D[] target(SimObject inter, SimObject target,
+	public static Vector[] target(SimObject inter, SimObject target,
 			double deltaT, boolean useLongWay) {
 		return target(inter.pos, target.pos, inter.vel, target.vel, deltaT,
 				inter.parent.mu, useLongWay);
 	}
 
-	public static Vector3D[] target(Vector3D[] state_int, Vector3D[] state_tgt,
+	public static Vector[] target(Vector[] state_int, Vector[] state_tgt,
 			double mu, double deltaT, boolean useLongWay) {
 		return target(state_int[0], state_tgt[0], state_int[1], state_tgt[1],
 				deltaT, mu, useLongWay);
 	}
 
-	public static double timeToEscape(Vector3D pos, Vector3D vel, double mu,
+	public static double timeToEscape(Vector pos, Vector vel, double mu,
 			double soiRadius) {
 		return timeToEscape(pos, vel, mu, soiRadius, false);
 	}
@@ -807,7 +814,7 @@ public class Astrophysics {
 	 * @param reverse
 	 * @return
 	 */
-	public static double timeToEscape(Vector3D pos, Vector3D vel, double mu,
+	public static double timeToEscape(Vector pos, Vector vel, double mu,
 			double soiRadius, boolean reverse) {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, mu);
 		orb.v = Math.PI; // TODO not sure if this works for hyperbolas
@@ -821,7 +828,7 @@ public class Astrophysics {
 		double tolerance = soiRadius / 1E9;
 		int iterations = 0;
 		while (Math.abs(dif) > tolerance && iterations < 100) {
-			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
+			Vector[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
 			double r = futureState[0].magnitude();
 			// System.out.println("r: " + r);
 
@@ -842,7 +849,7 @@ public class Astrophysics {
 		return mid;
 	}
 
-	public static double anomalyToEscape(Vector3D pos, Vector3D vel, double mu,
+	public static double anomalyToEscape(Vector pos, Vector vel, double mu,
 			double soiRadius) {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, mu);
 		orb.v = Math.PI; // TODO not sure if this works for hyperbolas
@@ -852,13 +859,13 @@ public class Astrophysics {
 		double low = 0;
 		double mid = (low + high) / 2.0;
 
-		Vector3D futurePos = new Vector3D();
-		Vector3D futureVel = new Vector3D();
+		Vector futurePos = new VectorND(0,0,0);
+		Vector futureVel = new VectorND(0,0,0);
 		double dif = soiRadius - pos.magnitude();
 		double tolerance = soiRadius / 1E9;
 		int iterations = 0;
 		while (Math.abs(dif) > tolerance && iterations < 100) {
-			Vector3D[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
+			Vector[] futureState = Astrophysics.kepler(pos, vel, mu, mid);
 			futurePos = futureState[0];
 			futureVel = futureState[1];
 

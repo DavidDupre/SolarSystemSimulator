@@ -7,11 +7,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 import simulator.Simulation;
 import simulator.SystemLoader;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
-import simulator.astro.Vector3D;
 import simulator.plans.ManeuverFactory;
 import simulator.scenario.source.CSVSource;
 import simulator.scenario.source.Source;
@@ -153,7 +155,7 @@ public class ScenarioLoader {
 			String parentName = e.getAttribute("parent");
 			Body parent = (Body) sim.solarSystem.getObject(parentName);
 
-			Vector3D[] state = new Vector3D[2];
+			Vector[] state = new Vector[2];
 			Element eState = (Element) e.getElementsByTagName("state").item(0);
 			switch (eState.getAttribute("type")) {
 			case "orbit":
@@ -169,10 +171,10 @@ public class ScenarioLoader {
 			case "vector":
 				Element posElement = (Element) eState.getElementsByTagName(
 						"pos").item(0);
-				Vector3D pos = getVectorFromElement(posElement);
+				Vector pos = getVectorFromElement(posElement);
 				Element velElement = (Element) eState.getElementsByTagName(
 						"vel").item(0);
-				Vector3D vel = getVectorFromElement(velElement);
+				Vector vel = getVectorFromElement(velElement);
 				state[0] = pos;
 				state[1] = vel;
 				break;
@@ -228,11 +230,11 @@ public class ScenarioLoader {
 		}
 	}
 
-	private Vector3D getVectorFromElement(Element e) {
+	private Vector getVectorFromElement(Element e) {
 		double x = Double.parseDouble(e.getAttribute("x"));
 		double y = Double.parseDouble(e.getAttribute("y"));
 		double z = Double.parseDouble(e.getAttribute("z"));
-		return new Vector3D(x, y, z);
+		return new VectorND(x, y, z);
 	}
 
 	/**

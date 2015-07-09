@@ -5,19 +5,21 @@ import static org.lwjgl.opengl.GL11.*;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 import simulator.astro.Astrophysics;
 import simulator.astro.Conic;
 import simulator.astro.Orbit;
-import simulator.astro.Vector3D;
 
 public abstract class SimObject {
 	public Body parent;
-	public Vector3D pos;
-	public Vector3D vel;
+	public Vector pos;
+	public Vector vel;
 	public String name;
 	protected Orbit orb;
 	public double lastUpdatedTime;
-	protected Vector3D[] orbitBuffer = new Vector3D[50];
+	protected Vector[] orbitBuffer = new Vector[50];
 	protected float[] color;
 
 	/**
@@ -46,8 +48,8 @@ public abstract class SimObject {
 		glPushMatrix();
 
 		// Position to body
-		Vector3D absPos = getAbsolutePos();
-		glTranslated(absPos.x, absPos.y, absPos.z);
+		Vector absPos = getAbsolutePos();
+		glTranslated(absPos.get(0), absPos.get(1), absPos.get(2));
 
 		// Set object-specific color
 		glColor3f(color[0], color[1], color[2]);
@@ -58,8 +60,8 @@ public abstract class SimObject {
 			if (parent != null) {
 				glBegin(GL_LINE_STRIP);
 				for (int i = 0; i < orbitBuffer.length; i++) {
-					glVertex3d(orbitBuffer[i].x, orbitBuffer[i].y,
-							orbitBuffer[i].z);
+					glVertex3d(orbitBuffer[i].get(0), orbitBuffer[i].get(1),
+							orbitBuffer[i].get(2));
 				}
 				glEnd();
 			}
@@ -91,11 +93,11 @@ public abstract class SimObject {
 		if(b != null) {
 			b.lock.lock();
 			if (parent != null) {
-				Vector3D absPos = getAbsolutePos();
-				Vector3D absVel = getAbsoluteVel();
+				Vector absPos = getAbsolutePos();
+				Vector absVel = getAbsoluteVel();
 				parent.getChildren().remove(this);
-				pos = absPos.clone().subtract(b.getAbsolutePos());
-				vel = absVel.clone().subtract(b.getAbsoluteVel());
+				pos = absPos.subtract(b.getAbsolutePos());
+				vel = absVel.subtract(b.getAbsoluteVel());
 			}
 			b.getChildren().add(this);
 			parent = b;
@@ -110,7 +112,7 @@ public abstract class SimObject {
 	protected void update(double delta) {
 		if (parent != null) {
 			lock.lock(); // TODO does this ruin epoch synchronization? 
-			Vector3D[] state = Astrophysics.kepler(pos, vel, parent.mu, delta);
+			Vector[] state = Astrophysics.kepler(pos, vel, parent.mu, delta);
 			pos = state[0];
 			vel = state[1];
 
@@ -122,7 +124,7 @@ public abstract class SimObject {
 				Conic c = new Conic(orb);
 				if(orb.e < 1.0) {
 					for (int i = 0; i < orbitBuffer.length; i++) {
-						Vector3D vertex = c.getPosition(i * 2.0 * Math.PI
+						Vector vertex = c.getPosition(i * 2.0 * Math.PI
 								/ (orbitBuffer.length - 1) + orb.v);
 						vertex.subtract(pos);
 						orbitBuffer[i] = vertex;
@@ -133,7 +135,7 @@ public abstract class SimObject {
 					double timeToEscape = Astrophysics.timeToEscape(pos, vel, parent.mu, parent.soiRadius, false);
 					double timeStep = timeToEscape / orbitBuffer.length;
 					for (int i=0; i<orbitBuffer.length; i++) {
-						Vector3D vertex = Astrophysics.kepler(pos, vel, parent.mu, timeStep*i)[0];
+						Vector vertex = Astrophysics.kepler(pos, vel, parent.mu, timeStep*i)[0];
 						vertex.subtract(pos);
 						orbitBuffer[i] = vertex;
 					}
@@ -141,7 +143,7 @@ public abstract class SimObject {
 //					double escapeV = Astrophysics.anomalyToEscape(pos, vel, parent.mu, parent.soiRadius);
 //					System.out.println("escapeV: " + escapeV);
 //					for (int i = 0; i < orbitBuffer.length; i++) {
-//						Vector3D vertex = c.getPosition((i-orbitBuffer.length/2) * escapeV * 2.0
+//						VectorND vertex = c.getPosition((i-orbitBuffer.length/2) * escapeV * 2.0
 //								/ (orbitBuffer.length - 1));
 //						vertex.subtract(pos);
 //						orbitBuffer[i] = vertex;
@@ -161,32 +163,32 @@ public abstract class SimObject {
 		lastUpdatedTime = timeTAI;
 	}
 
-	public Vector3D getRelativePos() {
+	public Vector getRelativePos() {
 		if (parent == null) {
 			return pos;
 		}
-		return pos.clone().subtract(parent.pos);
+		return ((VectorND) pos).clone().subtract(parent.pos);
 	}
 
-	public Vector3D getRelativeVel() {
+	public Vector getRelativeVel() {
 		if (parent == null) {
 			return vel;
 		}
-		return vel.clone().subtract(parent.vel);
+		return ((VectorND) vel).clone().subtract(parent.vel);
 	}
 
-	public Vector3D getAbsolutePos() {
+	public Vector getAbsolutePos() {
 		if (parent == null) {
 			return pos;
 		}
-		return pos.clone().add(parent.getAbsolutePos());
+		return ((VectorND) pos).clone().add(parent.getAbsolutePos());
 	}
 
-	public Vector3D getAbsoluteVel() {
+	public Vector getAbsoluteVel() {
 		if (parent == null) {
 			return vel;
 		}
-		return vel.clone().add(parent.getAbsoluteVel());
+		return ((VectorND) vel).clone().add(parent.getAbsoluteVel());
 	}
 	
 	public void superLock(boolean doLock) {

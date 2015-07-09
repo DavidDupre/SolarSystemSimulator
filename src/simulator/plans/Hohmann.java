@@ -6,8 +6,10 @@ import java.util.HashMap;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
-import simulator.astro.Vector3D;
 import simulator.plans.Burn.Command;
+
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
 
 /**
  * From page 313
@@ -83,7 +85,7 @@ public class Hohmann extends Maneuver {
 		Burn burnA = new Burn(executeEpoch, new Command() {
 			@Override
 			public void run() {
-				Vector3D deltaVA = ship.vel.clone().normalize()
+				Vector deltaVA = ((VectorND) ship.vel).clone().normalize()
 						.multiply(deltaVAMag);
 				ship.vel.add(deltaVA);
 			}
@@ -92,7 +94,7 @@ public class Hohmann extends Maneuver {
 		Burn burnB = new Burn(executeEpoch + tTrans, new Command() {
 			@Override
 			public void run() {
-				Vector3D deltaVB = ship.vel.clone().normalize()
+				Vector deltaVB = ((VectorND) ship.vel).clone().normalize()
 						.multiply(deltaVBMag);
 				ship.vel.add(deltaVB);
 			}

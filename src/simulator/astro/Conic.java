@@ -1,5 +1,8 @@
 package simulator.astro;
 
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 
 /**
  * For optimized conic section illustration
@@ -51,7 +54,7 @@ public class Conic {
 	 *            - mean anomaly
 	 * @return position vector
 	 */
-	public Vector3D getPosition(double v) {
+	public Vector getPosition(double v) {
 		double p = orb.p;
 		double e = orb.e;
 
@@ -63,6 +66,6 @@ public class Conic {
 		rPQW.set(0, 1, (p * sinV) / (1 + e * cosV));
 
 		Matrix rIJK = Matrix.multiply(trans, rPQW);
-		return new Vector3D(rIJK.get(0, 0), rIJK.get(1, 0), rIJK.get(2, 0));
+		return new VectorND(rIJK.get(0, 0), rIJK.get(1, 0), rIJK.get(2, 0));
 	}
 }

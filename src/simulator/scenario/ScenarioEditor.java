@@ -293,14 +293,14 @@ public class ScenarioEditor {
 
 		// TODO less copy-paste. See vectorFromElement method in ScenarioLoader
 		Element ePos = doc.createElement("pos");
-		ePos.setAttribute("x", String.valueOf(object.pos.x));
-		ePos.setAttribute("y", String.valueOf(object.pos.y));
-		ePos.setAttribute("z", String.valueOf(object.pos.z));
+		ePos.setAttribute("x", String.valueOf(object.pos.get(0)));
+		ePos.setAttribute("y", String.valueOf(object.pos.get(1)));
+		ePos.setAttribute("z", String.valueOf(object.pos.get(2)));
 
 		Element eVel = doc.createElement("vel");
-		eVel.setAttribute("x", String.valueOf(object.vel.x));
-		eVel.setAttribute("y", String.valueOf(object.vel.y));
-		eVel.setAttribute("z", String.valueOf(object.vel.z));
+		eVel.setAttribute("x", String.valueOf(object.vel.get(0)));
+		eVel.setAttribute("y", String.valueOf(object.vel.get(1)));
+		eVel.setAttribute("z", String.valueOf(object.vel.get(2)));
 
 		eState.appendChild(ePos);
 		eState.appendChild(eVel);

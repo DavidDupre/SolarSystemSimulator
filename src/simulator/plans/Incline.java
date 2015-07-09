@@ -6,8 +6,10 @@ import java.util.HashMap;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
-import simulator.astro.Vector3D;
 import simulator.plans.Burn.Command;
+
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
 
 public class Incline extends Maneuver {
 	private double i_final;
@@ -75,7 +77,8 @@ public class Incline extends Maneuver {
 		double v = ship.vel.magnitude();
 
 		/* Calculate flight path angle fpa */
-		Vector3D h = Vector3D.crossProduct(ship.pos, ship.vel);
+		Vector h = new VectorND(0,0,0);
+		h = Vector.crossProduct(h, ship.pos, ship.vel);
 		double cos_fpa = h.magnitude() / (r * v);
 
 		deltaV = Math.abs(2.0 * v * cos_fpa * Math.sin(deltaI / 2.0));
@@ -89,7 +92,7 @@ public class Incline extends Maneuver {
 				Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel,
 						ship.parent.mu);
 				orb.i = i_final;
-				Vector3D[] newState = Astrophysics.toRV(orb, ship.parent.mu,
+				Vector[] newState = Astrophysics.toRV(orb, ship.parent.mu,
 						false);
 				// TODO ideally it shouldn't have to change position
 				ship.pos = newState[0];

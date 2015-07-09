@@ -3,31 +3,33 @@ package simulator.plans;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import simulator.astro.Vector3D;
 import simulator.plans.Burn.Command;
 
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 public class Direct extends Maneuver {
-	private Vector3D vel;
+	private Vector vel;
 	
 	/**
 	 * Add velocity directly to the craft
 	 * @param vel
 	 */
-	public Direct(Vector3D vel) {
+	public Direct(Vector vel) {
 		this.vel = vel;
 		burns = new ArrayList<Burn>();
 		
 		inputs = new HashMap<String, String>();
-		inputs.put("x", String.valueOf(vel.x));
-		inputs.put("y", String.valueOf(vel.y));
-		inputs.put("z", String.valueOf(vel.z));
+		inputs.put("x", String.valueOf(vel.get(0)));
+		inputs.put("y", String.valueOf(vel.get(1)));
+		inputs.put("z", String.valueOf(vel.get(2)));
 	}
 	
 	public Direct(HashMap<String, String> args) {
 		double x = Double.parseDouble(args.get("x"));
 		double y = Double.parseDouble(args.get("y"));
 		double z = Double.parseDouble(args.get("z"));
-		vel = new Vector3D(x,y,z);
+		vel = new VectorND(x,y,z);
 		burns = new ArrayList<Burn>();
 		
 		inputs = args;

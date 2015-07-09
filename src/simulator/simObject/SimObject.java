@@ -1,9 +1,15 @@
 package simulator.simObject;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.ARBBufferObject.*;
+import static org.lwjgl.opengl.ARBVertexBufferObject.*;
 
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.lwjgl.BufferUtils;
 
 import com.pi.math.vector.Vector;
 import com.pi.math.vector.VectorND;
@@ -19,7 +25,8 @@ public abstract class SimObject {
 	public String name;
 	protected Orbit orb;
 	public double lastUpdatedTime;
-	protected Vector[] orbitBuffer = new Vector[50];
+	protected DoubleBuffer orbitBuffer;
+	protected final int BUFFER_SIZE = 50;
 	protected float[] color;
 
 	/**
@@ -53,19 +60,34 @@ public abstract class SimObject {
 
 		// Set object-specific color
 		glColor3f(color[0], color[1], color[2]);
-		
+
 		// Draw conic
 		if (detail.ordinal() > RenderDetail.LOW.ordinal()) {
-			lock.lock();
 			if (parent != null) {
-				glBegin(GL_LINE_STRIP);
-				for (int i = 0; i < orbitBuffer.length; i++) {
-					glVertex3d(orbitBuffer[i].get(0), orbitBuffer[i].get(1),
-							orbitBuffer[i].get(2));
-				}
-				glEnd();
+				lock.lock();
+				
+				IntBuffer ib = BufferUtils.createIntBuffer(1);
+				
+				glGenBuffersARB(ib);
+				int vHandle = ib.get(0);
+				
+				glEnableClientState(GL_VERTEX_ARRAY);
+				
+				glBindBufferARB(GL_ARRAY_BUFFER_ARB, vHandle);
+				glBufferDataARB(GL_ARRAY_BUFFER_ARB, orbitBuffer, GL_STATIC_DRAW_ARB);
+				glVertexPointer(3, GL_DOUBLE, 0, 0L);
+				
+				glDrawArrays(GL_LINE_STRIP, 0, BUFFER_SIZE);
+				
+				glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+				
+				glDisableClientState(GL_VERTEX_ARRAY);
+				
+				ib.put(0, vHandle);
+				glDeleteBuffersARB(ib);
+
+				lock.unlock();
 			}
-			lock.unlock();
 		}
 
 		// Draw point
@@ -76,7 +98,7 @@ public abstract class SimObject {
 		renderPhysical();
 
 		glPopMatrix();
-		
+
 		// Reset color to default
 		glColor3f(1.0f, 1.0f, 1.0f);
 	}
@@ -90,7 +112,7 @@ public abstract class SimObject {
 	}
 
 	protected void setParent(Body b) {
-		if(b != null) {
+		if (b != null) {
 			b.lock.lock();
 			if (parent != null) {
 				Vector absPos = getAbsolutePos();
@@ -111,7 +133,7 @@ public abstract class SimObject {
 
 	protected void update(double delta) {
 		if (parent != null) {
-			lock.lock(); // TODO does this ruin epoch synchronization? 
+			lock.lock(); // TODO does this ruin epoch synchronization?
 			Vector[] state = Astrophysics.kepler(pos, vel, parent.mu, delta);
 			pos = state[0];
 			vel = state[1];
@@ -120,38 +142,52 @@ public abstract class SimObject {
 			 * Buffer the orbit for the render thread
 			 */
 			if (renderDetail.ordinal() > RenderDetail.LOW.ordinal()) {
-				Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
-				Conic c = new Conic(orb);
-				if(orb.e < 1.0) {
-					for (int i = 0; i < orbitBuffer.length; i++) {
-						Vector vertex = c.getPosition(i * 2.0 * Math.PI
-								/ (orbitBuffer.length - 1) + orb.v);
-						vertex.subtract(pos);
-						orbitBuffer[i] = vertex;
-					}
-				} else {
-					// TODO this can be vastly optimized. Only update escapeV when the ship's orbit changes
-					
-					double timeToEscape = Astrophysics.timeToEscape(pos, vel, parent.mu, parent.soiRadius, false);
-					double timeStep = timeToEscape / orbitBuffer.length;
-					for (int i=0; i<orbitBuffer.length; i++) {
-						Vector vertex = Astrophysics.kepler(pos, vel, parent.mu, timeStep*i)[0];
-						vertex.subtract(pos);
-						orbitBuffer[i] = vertex;
-					}
-					
-//					double escapeV = Astrophysics.anomalyToEscape(pos, vel, parent.mu, parent.soiRadius);
-//					System.out.println("escapeV: " + escapeV);
-//					for (int i = 0; i < orbitBuffer.length; i++) {
-//						VectorND vertex = c.getPosition((i-orbitBuffer.length/2) * escapeV * 2.0
-//								/ (orbitBuffer.length - 1));
-//						vertex.subtract(pos);
-//						orbitBuffer[i] = vertex;
-//					}
-				}
+				updateOrbitBuffer();
 			}
 			lock.unlock();
 		}
+	}
+	
+	private void updateOrbitBuffer() {
+		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
+		Conic c = new Conic(orb);
+		orbitBuffer = BufferUtils
+				.createDoubleBuffer(BUFFER_SIZE * 3);
+		if (orb.e < 1.0) {
+			for (int i = 0; i < BUFFER_SIZE; i++) {
+				// TODO use mean anomaly to avoid pointy apoapsides
+				double nextAnomaly = i * 2.0 * Math.PI
+						/ (BUFFER_SIZE - 1) + orb.v;
+				Vector vertex = c.getPosition(nextAnomaly);
+				vertex.subtract(pos);
+				orbitBuffer.put(vertex.get(0)).put(vertex.get(1))
+						.put(vertex.get(2));
+			}
+		} else {
+			// TODO this can be vastly optimized. Only update escapeV
+			// when the ship's orbit changes
+
+			double timeToEscape = Astrophysics.timeToEscape(pos, vel,
+					parent.mu, parent.soiRadius, false);
+			double timeStep = timeToEscape / BUFFER_SIZE;
+			for (int i = 0; i < BUFFER_SIZE; i++) {
+				Vector vertex = Astrophysics.kepler(pos, vel,
+						parent.mu, timeStep * i)[0];
+				vertex.subtract(pos);
+				orbitBuffer.put(vertex.get(0)).put(vertex.get(1))
+						.put(vertex.get(2));
+			}
+
+//			double escapeV = Astrophysics.anomalyToEscape(pos, vel, parent.mu, parent.soiRadius);
+//			System.out.println("escapeV: " + escapeV);
+//			for (int i = 0; i < orbitBuffer.length; i++) {
+//				VectorND vertex = c.getPosition((i-orbitBuffer.length/2) * escapeV * 2.0
+//						/ (orbitBuffer.length - 1));
+//				vertex.subtract(pos);
+//				orbitBuffer[i] = vertex;
+//			}
+		}
+		orbitBuffer.flip();
 	}
 
 	/**
@@ -190,12 +226,12 @@ public abstract class SimObject {
 		}
 		return ((VectorND) vel).clone().add(parent.getAbsoluteVel());
 	}
-	
+
 	public void superLock(boolean doLock) {
-		if(parent != null) {
+		if (parent != null) {
 			parent.superLock(doLock);
 		}
-		if(doLock) {
+		if (doLock) {
 			lock.lock();
 		} else {
 			lock.unlock();

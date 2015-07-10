@@ -12,7 +12,7 @@
 	</object>
 	<plan name="test1">
 		<command type="Target">
-			<param target="Moon"></param>
+			<param target="test2"></param>
 			<param delay="one_orbit"></param>
 		</command>
 	</plan>

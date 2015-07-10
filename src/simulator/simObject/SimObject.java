@@ -1,7 +1,6 @@
 package simulator.simObject;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.ARBBufferObject.*;
 import static org.lwjgl.opengl.ARBVertexBufferObject.*;
 
 import java.nio.DoubleBuffer;

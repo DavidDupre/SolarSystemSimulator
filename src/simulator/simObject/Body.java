@@ -3,7 +3,7 @@ package simulator.simObject;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.lwjgl.util.glu.Sphere;
+import org.lwjglx.util.glu.Sphere;
 
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
@@ -44,8 +44,8 @@ public class Body extends SimObject {
 		radius = 1.0;
 		mu = Astrophysics.G;
 		mass = 1.0;
-		pos = new VectorND(0,0,0);
-		vel = new VectorND(0,0,0);
+		pos = new VectorND(0, 0, 0);
+		vel = new VectorND(0, 0, 0);
 		name = "null";
 		children = new ArrayList<SimObject>();
 	}
@@ -78,8 +78,8 @@ public class Body extends SimObject {
 			vel = state[1];
 			soiRadius = orb.a * Math.pow(mass / parent.mass, 2.0 / 5.0);
 		} else {
-			pos = new VectorND(0,0,0);
-			vel = new VectorND(0,0,0);
+			pos = new VectorND(0, 0, 0);
+			vel = new VectorND(0, 0, 0);
 			soiRadius = Double.MAX_VALUE;
 		}
 
@@ -91,7 +91,7 @@ public class Body extends SimObject {
 		}
 		updateTo(now);
 	}
-	
+
 	public Body(String name, Body parent, double mass, double radius,
 			Vector[] state, double epoch) {
 		color = new float[] { 1.0f, 1.0f, 1.0f };
@@ -106,7 +106,8 @@ public class Body extends SimObject {
 		vel = state[1];
 		if (parent != null) {
 			setParent(parent);
-			this.orb = Astrophysics.toOrbitalElements(state[0], state[1], parent.mu);
+			this.orb = Astrophysics.toOrbitalElements(state[0], state[1],
+					parent.mu);
 			soiRadius = orb.a * Math.pow(mass / parent.mass, 2.0 / 5.0);
 		} else {
 			soiRadius = Double.MAX_VALUE;

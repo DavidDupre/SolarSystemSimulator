@@ -9,7 +9,7 @@ import simulator.scenario.ScenarioEditor;
 import simulator.scenario.ScenarioFactory;
 import simulator.scenario.ScenarioLoader;
 import simulator.scenario.source.Source;
-import simulator.screen.Screen;
+import simulator.screen.Window;
 import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 
@@ -25,7 +25,7 @@ public class Simulation {
 	private SimObject focus;
 	public SolarSystem solarSystem;
 	private ScenarioLoader loader;
-	public Screen screen;
+	public Window screen;
 
 	public String rootFilePath;
 	public double simSpeed;
@@ -42,7 +42,7 @@ public class Simulation {
 
 	public void start() {
 		solarSystem = new SolarSystem(this);
-		screen = new Screen(this);
+		screen = new Window(this);
 
 		loader = new ScenarioLoader(this, rootFilePath
 				+ "/res/targetScenario2.xml");
@@ -51,7 +51,7 @@ public class Simulation {
 		solarSystem.start();
 
 		screen.setRenderer(solarSystem.getRenderer());
-		screen.start();
+		screen.run();
 
 		System.out.println("exporting simulation");
 		export();

@@ -1,7 +1,5 @@
 package simulator.simObject;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Time;
@@ -24,8 +22,8 @@ public class Ship extends SimObject {
 	public boolean storeRaw = false;
 
 	public Ship(TLE tle, Body parent) {
+		super();
 		color = new float[] { 1.0f, .2f, .2f };
-		lock = new ReentrantLock();
 		plan = new FlightPlan(this);
 		name = tle.name;
 		setParent(parent);
@@ -51,8 +49,8 @@ public class Ship extends SimObject {
 	 *            Epoch in julian date
 	 */
 	public Ship(String name, Vector[] state, Body parent, double epoch) {
+		super();
 		color = new float[] { 1.0f, .2f, .2f };
-		lock = new ReentrantLock();
 		plan = new FlightPlan(this);
 		this.name = name;
 		setParent(parent);

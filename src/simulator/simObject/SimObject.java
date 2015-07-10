@@ -25,6 +25,7 @@ public abstract class SimObject {
 	protected Orbit orb;
 	public double lastUpdatedTime;
 	protected DoubleBuffer orbitBuffer;
+	protected IntBuffer ib;
 	protected final int BUFFER_SIZE = 50;
 	protected float[] color;
 
@@ -39,7 +40,14 @@ public abstract class SimObject {
 	public enum RenderDetail {
 		LOW, MAX
 	}
-
+	
+	public SimObject() {
+		lock = new ReentrantLock();
+		ib = BufferUtils.createIntBuffer(1);
+		orbitBuffer = BufferUtils
+				.createDoubleBuffer(BUFFER_SIZE * 3);
+	}
+	
 	/**
 	 * Render using the last render detail level used, or its default render
 	 * level if no level is specified
@@ -65,24 +73,23 @@ public abstract class SimObject {
 			if (parent != null) {
 				lock.lock();
 				
-				IntBuffer ib = BufferUtils.createIntBuffer(1);
-				
-				glGenBuffersARB(ib);
-				int vHandle = ib.get(0);
-				
 				glEnableClientState(GL_VERTEX_ARRAY);
 				
+				// TODO Might not have to do this every time
+				glGenBuffersARB(ib);
+				int vHandle = ib.get(0);
 				glBindBufferARB(GL_ARRAY_BUFFER_ARB, vHandle);
 				glBufferDataARB(GL_ARRAY_BUFFER_ARB, orbitBuffer, GL_STATIC_DRAW_ARB);
+				
 				glVertexPointer(3, GL_DOUBLE, 0, 0L);
 				
-				glDrawArrays(GL_LINE_STRIP, 0, BUFFER_SIZE);
+				glDrawArrays(GL_LINE_STRIP, 0, orbitBuffer.capacity());
 				
 				glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 				
 				glDisableClientState(GL_VERTEX_ARRAY);
 				
-				ib.put(0, vHandle);
+				ib.put(0, ib.get(0));
 				glDeleteBuffersARB(ib);
 
 				lock.unlock();
@@ -150,8 +157,6 @@ public abstract class SimObject {
 	private void updateOrbitBuffer() {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
 		Conic c = new Conic(orb);
-		orbitBuffer = BufferUtils
-				.createDoubleBuffer(BUFFER_SIZE * 3);
 		if (orb.e < 1.0) {
 			for (int i = 0; i < BUFFER_SIZE; i++) {
 				// TODO use mean anomaly to avoid pointy apoapsides

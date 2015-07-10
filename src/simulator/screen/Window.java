@@ -37,7 +37,6 @@ public class Window {
 	public Camera camera;
 
 	public Window(Simulation sim) {
-		this.renderer = new SphereRenderer();
 		this.sim = sim;
 
 		camera = new Camera();

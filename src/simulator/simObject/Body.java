@@ -3,8 +3,6 @@ package simulator.simObject;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.lwjglx.util.glu.Sphere;
-
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
@@ -34,13 +32,10 @@ public class Body extends SimObject {
 
 	protected ArrayList<SimObject> children;
 
-	/**
-	 * Root body (ie Sun) constructor
-	 */
 	public Body() {
+		super();
 		color = new float[] { 1.0f, 1.0f, 1.0f };
-		lock = new ReentrantLock();
-		sphere = new Sphere();
+		sphere = new Sphere(radius);
 		radius = 1.0;
 		mu = Astrophysics.G;
 		mass = 1.0;
@@ -50,53 +45,19 @@ public class Body extends SimObject {
 		children = new ArrayList<SimObject>();
 	}
 
-	/**
-	 * Primary constructor
-	 * 
-	 * @param name
-	 * @param parent
-	 * @param mass
-	 * @param radius
-	 * @param orb
-	 * @param epoch
-	 */
 	public Body(String name, Body parent, double mass, double radius,
 			Orbit orb, double epoch) {
-		color = new float[] { 1.0f, 1.0f, 1.0f };
-		lock = new ReentrantLock();
-		sphere = new Sphere();
-		this.name = name;
-		children = new ArrayList<SimObject>();
-		this.mass = mass;
-		mu = mass * Astrophysics.G;
-		this.radius = radius;
-		this.orb = orb;
-		if (parent != null) {
-			setParent(parent);
-			Vector[] state = Astrophysics.toRV(orb, parent.mu, true);
-			pos = state[0];
-			vel = state[1];
-			soiRadius = orb.a * Math.pow(mass / parent.mass, 2.0 / 5.0);
-		} else {
-			pos = new VectorND(0, 0, 0);
-			vel = new VectorND(0, 0, 0);
-			soiRadius = Double.MAX_VALUE;
-		}
-
-		double now = System.currentTimeMillis() / 1000.0;
-		if (Simulation.REAL_TIME) {
-			lastUpdatedTime = Time.jdToTAI(epoch);
-		} else {
-			lastUpdatedTime = now;
-		}
-		updateTo(now);
+		this(name, parent, mass, radius, parent == null ? new VectorND[] {
+				new VectorND(0, 0, 0), new VectorND(0, 0, 0) } : Astrophysics
+				.toRV(orb, parent.mu, true), epoch);
 	}
 
 	public Body(String name, Body parent, double mass, double radius,
 			Vector[] state, double epoch) {
+		super();
 		color = new float[] { 1.0f, 1.0f, 1.0f };
 		lock = new ReentrantLock();
-		sphere = new Sphere();
+		sphere = new Sphere(radius);
 		this.name = name;
 		children = new ArrayList<SimObject>();
 		this.mass = mass;
@@ -129,6 +90,6 @@ public class Body extends SimObject {
 	@Override
 	protected void renderPhysical() {
 		// Draw physical sphere
-		sphere.draw((float) radius, 16, 16);
+		sphere.draw();
 	}
 }

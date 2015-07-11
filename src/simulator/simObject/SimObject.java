@@ -1,10 +1,9 @@
 package simulator.simObject;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.ARBVertexBufferObject.*;
+import static org.lwjgl.opengl.GL15.*;
 
 import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,9 +24,9 @@ public abstract class SimObject {
 	protected Orbit orb;
 	public double lastUpdatedTime;
 	protected DoubleBuffer orbitBuffer;
-	protected IntBuffer ib;
 	protected final int BUFFER_SIZE = 50;
 	protected float[] color;
+	protected int vHandle;
 
 	/**
 	 * Each object needs a lock for rendering. This is to prevent stutters while
@@ -40,14 +39,23 @@ public abstract class SimObject {
 	public enum RenderDetail {
 		LOW, MAX
 	}
-	
+
 	public SimObject() {
 		lock = new ReentrantLock();
-		ib = BufferUtils.createIntBuffer(1);
-		orbitBuffer = BufferUtils
-				.createDoubleBuffer(BUFFER_SIZE * 3);
+		orbitBuffer = BufferUtils.createDoubleBuffer(BUFFER_SIZE * 3);
 	}
-	
+
+	public void initGL() {
+		vHandle = glGenBuffers();
+		glBindBuffer(GL_ARRAY_BUFFER, vHandle);
+		glBufferData(GL_ARRAY_BUFFER, orbitBuffer,
+				GL_STATIC_DRAW);
+	}
+
+	public void dispose() {
+		glDeleteBuffers(vHandle);
+	}
+
 	/**
 	 * Render using the last render detail level used, or its default render
 	 * level if no level is specified
@@ -72,25 +80,17 @@ public abstract class SimObject {
 		if (detail.ordinal() > RenderDetail.LOW.ordinal()) {
 			if (parent != null) {
 				lock.lock();
-				
+
 				glEnableClientState(GL_VERTEX_ARRAY);
-				
-				// TODO Might not have to do this every time
-				glGenBuffersARB(ib);
-				int vHandle = ib.get(0);
-				glBindBufferARB(GL_ARRAY_BUFFER_ARB, vHandle);
-				glBufferDataARB(GL_ARRAY_BUFFER_ARB, orbitBuffer, GL_STATIC_DRAW_ARB);
-				
+
+				glBindBuffer(GL_ARRAY_BUFFER, vHandle);
+				glBufferSubData(GL_ARRAY_BUFFER, 0L, orbitBuffer);
+
 				glVertexPointer(3, GL_DOUBLE, 0, 0L);
-				
+
 				glDrawArrays(GL_LINE_STRIP, 0, orbitBuffer.capacity());
-				
-				glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-				
+
 				glDisableClientState(GL_VERTEX_ARRAY);
-				
-				ib.put(0, ib.get(0));
-				glDeleteBuffersARB(ib);
 
 				lock.unlock();
 			}
@@ -153,15 +153,15 @@ public abstract class SimObject {
 			lock.unlock();
 		}
 	}
-	
+
 	private void updateOrbitBuffer() {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
 		Conic c = new Conic(orb);
 		if (orb.e < 1.0) {
 			for (int i = 0; i < BUFFER_SIZE; i++) {
 				// TODO use mean anomaly to avoid pointy apoapsides
-				double nextAnomaly = i * 2.0 * Math.PI
-						/ (BUFFER_SIZE - 1) + orb.v;
+				double nextAnomaly = i * 2.0 * Math.PI / (BUFFER_SIZE - 1)
+						+ orb.v;
 				Vector vertex = c.getPosition(nextAnomaly);
 				vertex.subtract(pos);
 				orbitBuffer.put(vertex.get(0)).put(vertex.get(1))
@@ -175,21 +175,23 @@ public abstract class SimObject {
 					parent.mu, parent.soiRadius, false);
 			double timeStep = timeToEscape / BUFFER_SIZE;
 			for (int i = 0; i < BUFFER_SIZE; i++) {
-				Vector vertex = Astrophysics.kepler(pos, vel,
-						parent.mu, timeStep * i)[0];
+				Vector vertex = Astrophysics.kepler(pos, vel, parent.mu,
+						timeStep * i)[0];
 				vertex.subtract(pos);
 				orbitBuffer.put(vertex.get(0)).put(vertex.get(1))
 						.put(vertex.get(2));
 			}
 
-//			double escapeV = Astrophysics.anomalyToEscape(pos, vel, parent.mu, parent.soiRadius);
-//			System.out.println("escapeV: " + escapeV);
-//			for (int i = 0; i < orbitBuffer.length; i++) {
-//				VectorND vertex = c.getPosition((i-orbitBuffer.length/2) * escapeV * 2.0
-//						/ (orbitBuffer.length - 1));
-//				vertex.subtract(pos);
-//				orbitBuffer[i] = vertex;
-//			}
+			// double escapeV = Astrophysics.anomalyToEscape(pos, vel,
+			// parent.mu, parent.soiRadius);
+			// System.out.println("escapeV: " + escapeV);
+			// for (int i = 0; i < orbitBuffer.length; i++) {
+			// VectorND vertex = c.getPosition((i-orbitBuffer.length/2) *
+			// escapeV * 2.0
+			// / (orbitBuffer.length - 1));
+			// vertex.subtract(pos);
+			// orbitBuffer[i] = vertex;
+			// }
 		}
 		orbitBuffer.flip();
 	}

@@ -159,6 +159,8 @@ public class Window {
 		glPointSize(5); // Changes point size to 5 pixels
 		// TODO pls no hardcoderino
 
+		renderer.initGL();
+		
 		// Run the rendering loop until the user has attempted to close
 		// the window or has pressed the ESCAPE key.
 		while (glfwWindowShouldClose(window) == GL_FALSE) {
@@ -189,6 +191,8 @@ public class Window {
 			// invoked during this call.
 			glfwPollEvents();
 		}
+		
+		renderer.dispose();
 	}
 	
 	private double lastPosX;

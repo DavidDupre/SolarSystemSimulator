@@ -3,6 +3,7 @@ package simulator.simObject;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.lwjgl.opengl.GL15.*;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
@@ -82,6 +83,21 @@ public class Body extends SimObject {
 		}
 		updateTo(now);
 	}
+	
+	@Override
+	public void initGL() {
+		vHandle = glGenBuffers();
+		glBindBuffer(GL_ARRAY_BUFFER, vHandle);
+		glBufferData(GL_ARRAY_BUFFER, orbitBuffer,
+				GL_STATIC_DRAW);
+		sphere.initGL();
+	}
+	
+	@Override
+	public void dispose() {
+		glDeleteBuffers(vHandle);
+		sphere.dispose();
+	}
 
 	public ArrayList<SimObject> getChildren() {
 		return children;
@@ -89,7 +105,6 @@ public class Body extends SimObject {
 
 	@Override
 	protected void renderPhysical() {
-		// Draw physical sphere
 		sphere.draw();
 	}
 }

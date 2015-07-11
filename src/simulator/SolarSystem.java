@@ -162,6 +162,13 @@ public class SolarSystem extends Thread {
 
 	private class SolarSystemRenderer implements Renderer {
 		@Override
+		public void initGL() {
+			for(SimObject o: objects) {
+				o.initGL();
+			}
+		}
+		
+		@Override
 		public void update() {
 
 			/*
@@ -187,6 +194,13 @@ public class SolarSystem extends Thread {
 				} else {
 					o.render(RenderDetail.MAX);
 				}
+			}
+		}
+		
+		@Override
+		public void dispose() {
+			for(SimObject o: objects) {
+				o.dispose();
 			}
 		}
 	}

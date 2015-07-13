@@ -1,11 +1,15 @@
 package simulator.plans;
 
-public class Burn {
+import simulator.simObject.Ship;
+
+public class Burn implements SimEvent {
 	private Command command;
 	public double epoch;
 	public boolean isFinished = false;
+	public Maneuver maneuver;
 	
-	public Burn(double epoch, Command command) {
+	public Burn(Maneuver maneuver, double epoch, Command command) {
+		this.maneuver = maneuver;
 		this.command = command;
 		this.epoch = epoch;
 	}
@@ -17,5 +21,17 @@ public class Burn {
 	
 	public interface Command {
 		public void run();
+	}
+	
+	public double getEpoch() {
+		return epoch;
+	}
+	
+	public Ship getShip() {
+		return maneuver.getShip();
+	}
+	
+	public boolean isLast() {
+		return maneuver.burns.indexOf(this) == maneuver.burns.size() - 1;
 	}
 }

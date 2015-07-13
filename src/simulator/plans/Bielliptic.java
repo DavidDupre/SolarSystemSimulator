@@ -53,7 +53,7 @@ public class Bielliptic extends Maneuver {
 		double tTrans2 = Math.PI
 				* Math.sqrt((aTrans2 * aTrans2 * aTrans2) / mu);
 
-		burns.add(new Burn(ship.lastUpdatedTime, new Command() {
+		burns.add(new Burn(this, ship.lastUpdatedTime, new Command() {
 			@Override
 			public void run() {
 				Vector delta = ((VectorND) ship.vel).clone().normalize().multiply(deltaVA);
@@ -61,7 +61,7 @@ public class Bielliptic extends Maneuver {
 			}
 		}));
 
-		burns.add(new Burn(ship.lastUpdatedTime + tTrans1, new Command() {
+		burns.add(new Burn(this, ship.lastUpdatedTime + tTrans1, new Command() {
 			@Override
 			public void run() {
 				Vector delta = ((VectorND) ship.vel).clone().normalize().multiply(deltaVB);
@@ -69,7 +69,7 @@ public class Bielliptic extends Maneuver {
 			}
 		}));
 
-		burns.add(new Burn(ship.lastUpdatedTime + tTrans1 + tTrans2,
+		burns.add(new Burn(this, ship.lastUpdatedTime + tTrans1 + tTrans2,
 				new Command() {
 					@Override
 					public void run() {

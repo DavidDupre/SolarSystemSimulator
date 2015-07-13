@@ -1,8 +1,14 @@
 package simulator;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
+import simulator.astro.Astrophysics;
 import simulator.astro.Time;
+import simulator.plans.Burn;
+import simulator.plans.Maneuver;
+import simulator.plans.SOIChange;
+import simulator.plans.SimEvent;
 import simulator.screen.Renderer;
 import simulator.simObject.Body;
 import simulator.simObject.Ship;
@@ -25,10 +31,15 @@ public class SolarSystem extends Thread {
 	private double simStartTimeTAI;
 	private double epochTAI = Double.NaN;
 
+	private ArrayList<SimEvent> events;
+	private EventComparator bComp;
+
 	public SolarSystem(Simulation sim) {
 		renderer = new SolarSystemRenderer();
 		objects = new ArrayList<SimObject>();
 		this.sim = sim;
+		events = new ArrayList<SimEvent>();
+		bComp = new EventComparator();
 	}
 
 	/**
@@ -74,6 +85,103 @@ public class SolarSystem extends Thread {
 		if (Double.isNaN(epochTAI)) {
 			epochTAI = simStartTimeTAI;
 		}
+
+		runQuick();
+		runLive();
+	}
+
+	public void runQuick() {
+		// Create list of ships
+		ArrayList<Ship> ships = new ArrayList<Ship>();
+		for (SimObject o : objects) {
+			if (o instanceof Ship) {
+				Ship s = (Ship) o;
+				ships.add(s);
+			}
+		}
+
+		// Create list of burns and initialize first maneuvers
+		events = new ArrayList<SimEvent>();
+		for (Ship s : ships) {
+			if (!s.getPlan().getManeuvers().isEmpty()) {
+				Maneuver m = s.getPlan().getManeuvers().get(0);
+				m.init();
+				events.addAll(m.burns);
+			}
+		}
+		bComp = new EventComparator();
+		events.sort(bComp);
+
+		// Cycle through events
+		while (!events.isEmpty()) {
+			SimEvent e = events.get(0);
+			for (SimObject o : objects) {
+				o.updateTo(e.getEpoch());
+			}
+			
+			e.execute();
+			events.remove(e);
+
+			refreshSimState(e.getShip());
+
+			if (e instanceof Burn) {
+				Burn b = (Burn) e;
+
+				// Handle maneuver initialization
+				if (b.isLast()) {
+					ArrayList<Maneuver> maneuvers = b.maneuver.getShip()
+							.getPlan().getManeuvers();
+					int nextIndex = maneuvers.indexOf(b.maneuver) + 1;
+					if (maneuvers.size() > nextIndex) {
+						Maneuver nextM = maneuvers.get(nextIndex);
+						nextM.init();
+						events.addAll(nextM.burns);
+						events.sort(bComp);
+					}
+				}
+			} else if (e instanceof SOIChange) {
+				// Check for other events with the same ship. After a SOIChange,
+				// those changes are irrelevant
+				for (SimEvent e2 : events) {
+					if (e2.getShip().equals(e.getShip()) && e2 instanceof SOIChange) {
+						events.remove(e2);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Must be called after any change is made to the simulation (other than
+	 * updating it). This checks for SOI changes.
+	 * 
+	 * TODO use some sort of listener to do this automatically?
+	 */
+	public void refreshSimState(Ship s) {
+		// Check sibling case
+		for (SimObject o : s.parent.getChildren()) {
+			if (o instanceof Body) {
+				Body body = (Body) o;
+				double timeToIntercept = s.timeToIntercept(body);
+				if (timeToIntercept > 0) {
+					events.add(new SOIChange(s, body, s.lastUpdatedTime
+							+ timeToIntercept));
+					events.sort(bComp);
+				}
+			}
+		}
+		// Check parent case
+		if (s.isEscapingSOI()) {
+			double timeToEscape = Astrophysics.timeToEscape(s.pos, s.vel,
+					s.parent.mu, s.parent.soiRadius);
+			events.add(new SOIChange(s, s.parent.parent, s.lastUpdatedTime
+					+ timeToEscape));
+			events.sort(bComp);
+		}
+	}
+
+	public void runLive() {
+		// Live simulation
 		while (true) {
 			/*
 			 * Add objects to the render update list. Children of all direct
@@ -91,7 +199,7 @@ public class SolarSystem extends Thread {
 
 			/* Update the simObjects */
 			double lastEpoch = epochTAI;
-			for (SimObject o : updateObjects) {
+			for (SimObject o : objects) {
 				updateEpoch();
 				o.updateTo(epochTAI);
 			}
@@ -99,6 +207,14 @@ public class SolarSystem extends Thread {
 			// (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
 			// System.out.println("Current epoch: " + Time.getJulianDate((long)
 			// (1000 * epochTAI)));
+		}
+	}
+
+	private class EventComparator implements Comparator<SimEvent> {
+		@Override
+		public int compare(SimEvent burn1, SimEvent burn2) {
+			return burn1.getEpoch() < burn2.getEpoch() ? -1
+					: burn1.getEpoch() == burn2.getEpoch() ? 0 : 1;
 		}
 	}
 
@@ -163,11 +279,11 @@ public class SolarSystem extends Thread {
 	private class SolarSystemRenderer implements Renderer {
 		@Override
 		public void initGL() {
-			for(SimObject o: objects) {
+			for (SimObject o : objects) {
 				o.initGL();
 			}
 		}
-		
+
 		@Override
 		public void update() {
 
@@ -188,7 +304,7 @@ public class SolarSystem extends Thread {
 			/*
 			 * TODO find a better way for object-specific settings
 			 */
-			for (SimObject o : updateObjects) {
+			for (SimObject o : objects) {
 				if (o instanceof Ship) {
 					o.render(RenderDetail.MAX);
 				} else {
@@ -196,10 +312,10 @@ public class SolarSystem extends Thread {
 				}
 			}
 		}
-		
+
 		@Override
 		public void dispose() {
-			for(SimObject o: objects) {
+			for (SimObject o : objects) {
 				o.dispose();
 			}
 		}

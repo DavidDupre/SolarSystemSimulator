@@ -31,7 +31,7 @@ public class WaitCommand extends Maneuver {
 
 	@Override
 	public void init() {
-		burns.add(new Burn(ship.lastUpdatedTime + waitTime, new Command() {
+		burns.add(new Burn(this, ship.lastUpdatedTime + waitTime, new Command() {
 			@Override
 			public void run() {
 				// ayy lmao

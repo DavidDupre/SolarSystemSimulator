@@ -3,6 +3,7 @@ package simulator.plans;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import simulator.Simulation;
 import simulator.plans.Burn.Command;
 
 import com.pi.math.vector.Vector;
@@ -25,7 +26,7 @@ public class Direct extends Maneuver {
 		inputs.put("z", String.valueOf(vel.get(2)));
 	}
 	
-	public Direct(HashMap<String, String> args) {
+	public Direct(Simulation sim, HashMap<String, String> args) {
 		double x = Double.parseDouble(args.get("x"));
 		double y = Double.parseDouble(args.get("y"));
 		double z = Double.parseDouble(args.get("z"));
@@ -39,7 +40,7 @@ public class Direct extends Maneuver {
 	public void init() {
 		deltaV = vel.magnitude();
 		
-		Burn burn = new Burn(ship.lastUpdatedTime, new Command() {
+		Burn burn = new Burn(this, ship.lastUpdatedTime, new Command() {
 			@Override
 			public void run() {
 				ship.vel.add(vel);

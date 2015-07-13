@@ -117,7 +117,7 @@ public abstract class SimObject {
 
 	}
 
-	protected void setParent(Body b) {
+	public void setParent(Body b) {
 		if (b != null) {
 			b.lock.lock();
 			if (parent != null) {
@@ -204,7 +204,7 @@ public abstract class SimObject {
 		update(timeTAI - lastUpdatedTime);
 		lastUpdatedTime = timeTAI;
 	}
-
+	
 	public Vector getRelativePos() {
 		if (parent == null) {
 			return pos;
@@ -217,6 +217,14 @@ public abstract class SimObject {
 			return vel;
 		}
 		return ((VectorND) vel).clone().subtract(parent.vel);
+	}
+	
+	public Vector getRelativePos(SimObject o) {
+		return getAbsolutePos().subtract(o.getAbsolutePos());
+	}
+	
+	public Vector getRelativeVel(SimObject o) {
+		return getAbsoluteVel().subtract(o.getAbsoluteVel());
 	}
 
 	public Vector getAbsolutePos() {

@@ -18,7 +18,7 @@ public class Circularize extends Maneuver {
 		final Vector circVel = ((VectorND) ship.vel).clone().normalize().multiply(vCircMag);
 		deltaV = circVel.dist(ship.vel);
 		
-		burns.add(new Burn(ship.lastUpdatedTime, new Command() {
+		burns.add(new Burn(this, ship.lastUpdatedTime, new Command() {
 			@Override
 			public void run() {
 				ship.vel.set(circVel);

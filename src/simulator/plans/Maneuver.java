@@ -6,7 +6,7 @@ import java.util.HashMap;
 import simulator.simObject.Ship;
 
 public abstract class Maneuver {	
-	protected ArrayList<Burn> burns;
+	public ArrayList<Burn> burns;
 	protected Ship ship;
 	public double deltaV;
 	public HashMap<String, String> inputs;
@@ -15,18 +15,8 @@ public abstract class Maneuver {
 		this.ship = ship;
 	}
 	
-	public void updateTo(double epoch) {
-		for(int i=0; i<burns.size(); i++) {
-			Burn b = burns.get(i);
-			if(!b.isFinished) {
-				/* If the ship has missed the burn, reverse time */
-				if(ship.lastUpdatedTime > b.epoch) {
-					ship.storeRaw = true;
-					ship.updateTo(b.epoch);
-					b.execute();
-				}
-			}
-		}
+	public Ship getShip() {
+		return ship;
 	}
 	
 	public double getStartEpoch() {

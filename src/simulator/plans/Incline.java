@@ -86,7 +86,7 @@ public class Incline extends Maneuver {
 		/*
 		 * Create the burn TODO use actual epoch instead of lastUpdatedTime
 		 */
-		burns.add(new Burn(ship.lastUpdatedTime + timeToNode, new Command() {
+		burns.add(new Burn(this, ship.lastUpdatedTime + timeToNode, new Command() {
 			@Override
 			public void run() {
 				Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel,

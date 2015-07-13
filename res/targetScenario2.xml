@@ -10,9 +10,9 @@
 	<object name="test2" parent="Earth" type="ship">
 		<state type="orbit" a="1.2E7" i="20" e="0.1" peri="20" node="0" v="60"></state>
 	</object>
-	<plan name="test1">
+	<plan name="test2">
 		<command type="Target">
-			<param target="test2"></param>
+			<param target="Moon"></param>
 			<param delay="one_orbit"></param>
 		</command>
 	</plan>

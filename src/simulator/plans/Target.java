@@ -206,14 +206,14 @@ public class Target extends Maneuver {
 		System.out.println("Transfer time (min): " + timeOfMinOfMin / 60.0);
 		System.out.println("Delta v: " + deltaV);
 
-		Burn burnA = new Burn(ship.lastUpdatedTime + minDelay, new Command() {
+		Burn burnA = new Burn(this, ship.lastUpdatedTime + minDelay, new Command() {
 			@Override
 			public void run() {
 				ship.vel.add(deltaVA);
 			}
 		});
 
-		Burn burnB = new Burn(ship.lastUpdatedTime + minDelay + timeOfMinOfMin,
+		Burn burnB = new Burn(this, ship.lastUpdatedTime + minDelay + timeOfMinOfMin,
 				new Command() {
 					@Override
 					public void run() {

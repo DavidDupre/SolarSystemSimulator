@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <scenerio>
 	<focus>Earth</focus>
-	<speed>1E3</speed>
+	<speed>1E4</speed>
 	<camera pitch="-127.33335" yaw="-176.0" zoom="46.238007"/>
 	<group type="body" path="/res/solarSystem.csv"></group>
 	<object name="test1" parent="Earth" type="ship">

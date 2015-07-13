@@ -1,4 +1,4 @@
-package simulator.plans;
+package simulator.plans.maneuvers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.HashMap;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
+import simulator.plans.Burn;
+import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 
 import com.pi.math.vector.Vector;

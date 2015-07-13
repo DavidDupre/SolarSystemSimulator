@@ -22,7 +22,8 @@ public class Astrophysics {
 	 */
 	public static Vector dVToCircularize(double r, Vector v, double mu) {
 		double vCircMag = Math.sqrt(mu / r);
-		Vector vCircVector = ((VectorND) v).clone().normalize().multiply(vCircMag);
+		Vector vCircVector = ((VectorND) v).clone().normalize()
+				.multiply(vCircMag);
 		Vector deltaV = vCircVector.subtract(v);
 		return deltaV;
 	}
@@ -150,17 +151,18 @@ public class Astrophysics {
 		double twoPi = 2 * Math.PI;
 
 		// Find specific angular momentum
-		Vector h = new VectorND(0,0,0);
+		Vector h = new VectorND(0, 0, 0);
 		h = Vector.crossProduct(h, r, v);
 
 		// Find the node vector
 		Vector k = new VectorND(0, 0, 1.0);
-		Vector n = new VectorND(0,0,0);
+		Vector n = new VectorND(0, 0, 0);
 		n = Vector.crossProduct(n, k, h);
 		double nMag = n.magnitude(); // nMag being 0 screws thing up
 
 		Vector e = ((((VectorND) r).clone().multiply(vMag * vMag - (mu / rMag)))
-				.subtract(((VectorND) v).clone().multiply(rDotV))).multiply(1.0 / mu);
+				.subtract(((VectorND) v).clone().multiply(rDotV)))
+				.multiply(1.0 / mu);
 		double eMag = e.magnitude();
 
 		double sguig = vMag * vMag / 2.0 - mu / rMag;
@@ -208,7 +210,8 @@ public class Astrophysics {
 		double rDotV = Vector.dotProduct(r, v);
 
 		Vector e = ((((VectorND) r).clone().multiply(vMag * vMag - (mu / rMag)))
-				.subtract(((VectorND) v).clone().multiply(rDotV))).multiply(1 / mu);
+				.subtract(((VectorND) v).clone().multiply(rDotV)))
+				.multiply(1 / mu);
 
 		return e.magnitude();
 	}
@@ -244,7 +247,7 @@ public class Astrophysics {
 			x_0 = rootGrav * deltaT * alpha;
 		} else if (Math.abs(alpha) < parabThresh) {
 			// Parabola
-			Vector h = new VectorND(0,0,0);
+			Vector h = new VectorND(0, 0, 0);
 			h = Vector.crossProduct(h, r_0, v_0);
 			double p = h.mag2() / mu;
 			double s = Math
@@ -292,9 +295,10 @@ public class Astrophysics {
 		double gDot = 1.0 - ((x_n * x_n) / r) * c2;
 		double fDot = (rootGrav / (r * r_0mag)) * x_n * (psi * c3 - 1.0);
 
-		Vector rVec = ((VectorND) r_0).clone().multiply(f).add(((VectorND)v_0).clone().multiply(g));
+		Vector rVec = ((VectorND) r_0).clone().multiply(f)
+				.add(((VectorND) v_0).clone().multiply(g));
 		Vector vVec = ((VectorND) r_0).clone().multiply(fDot)
-				.add(((VectorND)v_0).clone().multiply(gDot));
+				.add(((VectorND) v_0).clone().multiply(gDot));
 
 		return new Vector[] { rVec, vVec };
 	}
@@ -359,7 +363,7 @@ public class Astrophysics {
 			E = kepEqtnH(M, orb.e);
 		}
 
-		double v;
+		double v = 0;
 		if (orb.e != 0) {
 			v = anomalyToV(orb.e, E);
 		} else {
@@ -382,7 +386,11 @@ public class Astrophysics {
 	 */
 	public static double vToAnomaly(double e, double v) {
 		if (e < 1.0) {
-			return Math.acos((e + Math.cos(v)) / (1.0 + e * Math.cos(v)));
+			double E = Math.acos( (e + Math.cos(v)) / (1.0 + e * Math.cos(v)) );
+			if(v > Math.PI) {
+				E = 2.0 * Math.PI - E;
+			}
+			return E;
 		} else if (e == 1.0) {
 			return Math.tan(v / 2.0);
 		} else {
@@ -403,10 +411,13 @@ public class Astrophysics {
 	 */
 	public static double anomalyToV(double e, double E) {
 		if (e < 1.0) {
-			return Math.asin((Math.sin(E) * Math.sqrt(1.0 - e * e)))
-					/ (1.0 - e * Math.cos(E));
+			double v = Math.acos( (Math.cos(E) - e) / (1.0 - e * Math.cos(E)) );
+			if(E > Math.PI) {
+				v = -v;
+			}
+			return v;
 		} else {
-			return Math.acos((Math.cosh(E) - e)) / (1.0 - e * Math.cosh(E));
+			return Math.acos( (Math.cosh(E) - e) / (1.0 - e * Math.cosh(E)) );
 		}
 	}
 
@@ -572,8 +583,8 @@ public class Astrophysics {
 	 *
 	 -----------------------------------------------------------------------------*/
 
-	public static Vector[] lambert(Vector ro, Vector r,
-			boolean useLongWay, boolean overrev, double dttu, double mu) {
+	public static Vector[] lambert(Vector ro, Vector r, boolean useLongWay,
+			boolean overrev, double dttu, double mu) {
 		double twopi = 2.0 * Math.PI;
 		double small = 1E-6;
 		int numiter = 40;
@@ -703,9 +714,11 @@ public class Astrophysics {
 				f = 1.0 - y / roMag;
 				gdot = 1.0 - y / rMag;
 				g = 1.0 / (vara * Math.sqrt(y / mu)); // 1 over g
-				Vector v_0 = ((VectorND) r).clone().subtract(((VectorND)ro).clone().multiply(f))
+				Vector v_0 = ((VectorND) r).clone()
+						.subtract(((VectorND) ro).clone().multiply(f))
 						.multiply(g);
-				Vector v = ((VectorND) r).clone().multiply(gdot).subtract(ro).multiply(g);
+				Vector v = ((VectorND) r).clone().multiply(gdot).subtract(ro)
+						.multiply(g);
 
 				return new Vector[] { v_0, v };
 			}
@@ -734,11 +747,11 @@ public class Astrophysics {
 	 *         Note that a low r_p means the body is subject to aerodynamic
 	 *         perturbaterinos, which are not modeled with "kepler()"
 	 */
-	public static double hitEarth(Vector r_int, Vector r_tgt,
-			Vector v_transA, Vector v_transB, double a, double mu) {
+	public static double hitEarth(Vector r_int, Vector r_tgt, Vector v_transA,
+			Vector v_transB, double a, double mu) {
 		// if(Vector3D.dotProduct(r_int, v_transA)<0 &&
 		// Vector3D.dotProduct(r_tgt, v_transB)>0) {
-		Vector h = new VectorND(0,0,0);
+		Vector h = new VectorND(0, 0, 0);
 		double h_t = Vector.crossProduct(h, r_int, v_transB).magnitude();
 		double p = (h_t * h_t) / mu;
 		double e = Math.sqrt((a - p) / a);
@@ -763,9 +776,8 @@ public class Astrophysics {
 	 * @return the delta-v vectors for two burns, one to be completed
 	 *         immediately and the other after time deltaT
 	 */
-	public static Vector[] target(Vector r_int, Vector r_tgt,
-			Vector v_int, Vector v_tgt, double deltaT, double mu,
-			boolean useLongWay) {
+	public static Vector[] target(Vector r_int, Vector r_tgt, Vector v_int,
+			Vector v_tgt, double deltaT, double mu, boolean useLongWay) {
 		// Propagate target
 		Vector[] state = kepler(r_tgt, v_tgt, mu, deltaT);
 		Vector r_tgtB = state[0];
@@ -849,6 +861,31 @@ public class Astrophysics {
 		return mid;
 	}
 
+	/**
+	 * Use a funky logarithmic search to brute force the time to escape. Don't
+	 * use if the orbit isn't hyperbolic. I'm not checking that again.
+	 */
+	public static double shittyTimeToEscape(Vector pos, Vector vel, double mu,
+			double soiRadius) {
+		double t = 1.0;
+		double r = 0;
+		while (r < soiRadius) {
+			t *= 10.0;
+			r = kepler(pos, vel, mu, t)[0].magnitude();
+		}
+		double min = t / 10.0;
+		double max = t;
+		int samples = 100;
+		for (int i = 0; i < samples; i++) {
+			t = min + max * i / (double) samples;
+			r = kepler(pos, vel, mu, t)[0].magnitude();
+			if (r > soiRadius) {
+				return t;
+			}
+		}
+		return max;
+	}
+
 	public static double anomalyToEscape(Vector pos, Vector vel, double mu,
 			double soiRadius) {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, mu);
@@ -859,8 +896,8 @@ public class Astrophysics {
 		double low = 0;
 		double mid = (low + high) / 2.0;
 
-		Vector futurePos = new VectorND(0,0,0);
-		Vector futureVel = new VectorND(0,0,0);
+		Vector futurePos = new VectorND(0, 0, 0);
+		Vector futureVel = new VectorND(0, 0, 0);
 		double dif = soiRadius - pos.magnitude();
 		double tolerance = soiRadius / 1E9;
 		int iterations = 0;

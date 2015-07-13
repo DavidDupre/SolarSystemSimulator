@@ -158,10 +158,12 @@ public abstract class SimObject {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
 		Conic c = new Conic(orb);
 		if (orb.e < 1.0) {
+			double currentAnomaly = Astrophysics.vToAnomaly(orb.e, orb.v);
 			for (int i = 0; i < BUFFER_SIZE; i++) {
-				// TODO use mean anomaly to avoid pointy apoapsides
 				double nextAnomaly = i * 2.0 * Math.PI / (BUFFER_SIZE - 1)
-						+ orb.v;
+						+ currentAnomaly;
+				nextAnomaly %= 2.0 * Math.PI;
+				nextAnomaly = Astrophysics.anomalyToV(orb.e, nextAnomaly);
 				Vector vertex = c.getPosition(nextAnomaly);
 				vertex.subtract(pos);
 				orbitBuffer.put(vertex.get(0)).put(vertex.get(1))
@@ -172,8 +174,8 @@ public abstract class SimObject {
 			// when the ship's orbit changes
 
 			double timeToEscape = Astrophysics.timeToEscape(pos, vel,
-					parent.mu, parent.soiRadius, false);
-			double timeStep = timeToEscape / BUFFER_SIZE;
+					parent.mu, parent.soiRadius);
+			double timeStep = timeToEscape / (double) BUFFER_SIZE;
 			for (int i = 0; i < BUFFER_SIZE; i++) {
 				Vector vertex = Astrophysics.kepler(pos, vel, parent.mu,
 						timeStep * i)[0];

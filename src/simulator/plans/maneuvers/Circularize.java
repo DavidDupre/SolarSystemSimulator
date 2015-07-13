@@ -1,7 +1,9 @@
-package simulator.plans;
+package simulator.plans.maneuvers;
 
 import java.util.ArrayList;
 
+import simulator.plans.Burn;
+import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 
 import com.pi.math.vector.Vector;

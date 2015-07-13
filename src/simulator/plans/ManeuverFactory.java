@@ -5,6 +5,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 import simulator.Simulation;
+import simulator.plans.maneuvers.Bielliptic;
+import simulator.plans.maneuvers.Circularize;
+import simulator.plans.maneuvers.Direct;
+import simulator.plans.maneuvers.Hohmann;
+import simulator.plans.maneuvers.Incline;
+import simulator.plans.maneuvers.OneTangent;
+import simulator.plans.maneuvers.Target;
+import simulator.plans.maneuvers.WaitCommand;
 
 /**
  * Utility class to work with scenario files

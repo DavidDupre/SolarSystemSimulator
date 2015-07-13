@@ -1,4 +1,4 @@
-package simulator.plans;
+package simulator.plans.maneuvers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.HashMap;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
+import simulator.plans.Burn;
+import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 import simulator.simObject.SimObject;
 
@@ -202,9 +204,9 @@ public class Target extends Maneuver {
 
 		this.deltaV = deltaVA.magnitude() + deltaVB.magnitude();
 
-		System.out.println("Delay (min): " + minDelay / 60.0);
-		System.out.println("Transfer time (min): " + timeOfMinOfMin / 60.0);
-		System.out.println("Delta v: " + deltaV);
+//		System.out.println("Delay (min): " + minDelay / 60.0);
+//		System.out.println("Transfer time (min): " + timeOfMinOfMin / 60.0);
+//		System.out.println("Delta v: " + deltaV);
 
 		Burn burnA = new Burn(this, ship.lastUpdatedTime + minDelay, new Command() {
 			@Override

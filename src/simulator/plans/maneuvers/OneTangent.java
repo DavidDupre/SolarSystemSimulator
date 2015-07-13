@@ -1,6 +1,9 @@
-package simulator.plans;
+package simulator.plans.maneuvers;
 
 import java.util.ArrayList;
+
+import simulator.plans.Burn;
+import simulator.plans.Maneuver;
 
 public class OneTangent extends Maneuver {
 	private double rFinal;

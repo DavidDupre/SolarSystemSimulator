@@ -2,6 +2,9 @@ package simulator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+
+import com.pi.math.vector.Vector;
 
 import simulator.astro.Astrophysics;
 import simulator.astro.Time;
@@ -42,43 +45,6 @@ public class SolarSystem extends Thread {
 		bComp = new EventComparator();
 	}
 
-	/**
-	 * @return the current epoch in TAI seconds for the solar system
-	 */
-	public double getEpoch() {
-		return epochTAI;
-	}
-
-	/**
-	 * @param epoch
-	 *            The epoch in TAI time
-	 */
-	public void setEpoch(double epoch) {
-		this.epochTAI = epoch;
-	}
-
-	/**
-	 * @param jd
-	 *            The epoch as a julian date
-	 */
-	public void setEpochJD(double jd) {
-		setEpoch(Time.jdToTAI(jd));
-	}
-
-	/**
-	 * Set the epoch as a date from the gregorian calendar
-	 * 
-	 * @param yr
-	 * @param mo
-	 * @param d
-	 * @param h
-	 * @param min
-	 * @param s
-	 */
-	public void setEpoch(int yr, int mo, int d, int h, int min, double s) {
-		setEpoch(Time.jdToTAI(Time.getJulianDate(yr, mo, d, h, min, s)));
-	}
-
 	@Override
 	public void run() {
 		lastTime = System.currentTimeMillis();
@@ -86,17 +52,26 @@ public class SolarSystem extends Thread {
 			epochTAI = simStartTimeTAI;
 		}
 
-		runQuick();
-		runLive();
+		bufferEvents();
+		
+		System.out.println("\n\nStarting live simulation\n\n");
+		
+		displayLiveSimulation();
 	}
 
-	public void runQuick() {
+	private void bufferEvents() {
+		ArrayList<SimEvent> deadEvents = new ArrayList<SimEvent>();
+		HashMap<Ship, Body> initParents = new HashMap<Ship, Body>();
+		HashMap<Ship, Vector[]> initStates = new HashMap<Ship, Vector[]>();
+		
 		// Create list of ships
 		ArrayList<Ship> ships = new ArrayList<Ship>();
 		for (SimObject o : objects) {
 			if (o instanceof Ship) {
 				Ship s = (Ship) o;
 				ships.add(s);
+				initParents.put(s, s.parent);
+				initStates.put(s, new Vector[]{s.pos, s.vel});
 			}
 		}
 
@@ -121,6 +96,7 @@ public class SolarSystem extends Thread {
 			
 			e.execute();
 			events.remove(e);
+			deadEvents.add(e);
 
 			refreshSimState(e.getShip());
 
@@ -149,6 +125,20 @@ public class SolarSystem extends Thread {
 				}
 			}
 		}
+		
+		// Resurrect the events for use in the live simulation
+		events = deadEvents;
+		
+		// Reverse time and restore ships to initial states
+		for(SimObject o: objects) {
+			o.updateTo(simStartTimeTAI);
+		}
+		for(Ship s: ships) {
+			s.setParent(initParents.get(s));
+			Vector[] initState = initStates.get(s);
+			s.pos = initState[0];
+			s.vel = initState[1];
+		}
 	}
 
 	/**
@@ -157,7 +147,7 @@ public class SolarSystem extends Thread {
 	 * 
 	 * TODO use some sort of listener to do this automatically?
 	 */
-	public void refreshSimState(Ship s) {
+	private void refreshSimState(Ship s) {
 		// Check sibling case
 		for (SimObject o : s.parent.getChildren()) {
 			if (o instanceof Body) {
@@ -180,8 +170,10 @@ public class SolarSystem extends Thread {
 		}
 	}
 
-	public void runLive() {
+	private void displayLiveSimulation() {
 		// Live simulation
+		int eventIndex = 0;
+		SimEvent currentEvent = events.get(eventIndex);
 		while (true) {
 			/*
 			 * Add objects to the render update list. Children of all direct
@@ -199,22 +191,23 @@ public class SolarSystem extends Thread {
 
 			/* Update the simObjects */
 			double lastEpoch = epochTAI;
+			updateEpoch();
+			while(epochTAI > currentEvent.getEpoch() && eventIndex < events.size()) {
+				for (SimObject o : objects) {
+					o.updateTo(currentEvent.getEpoch());
+				}
+				currentEvent.execute();
+				eventIndex++;
+				if(eventIndex < events.size()) {
+					currentEvent = events.get(eventIndex);
+				}
+			}
 			for (SimObject o : objects) {
-				updateEpoch();
 				o.updateTo(epochTAI);
 			}
+			
 			// System.out.println("physics fps: " +
 			// (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
-			// System.out.println("Current epoch: " + Time.getJulianDate((long)
-			// (1000 * epochTAI)));
-		}
-	}
-
-	private class EventComparator implements Comparator<SimEvent> {
-		@Override
-		public int compare(SimEvent burn1, SimEvent burn2) {
-			return burn1.getEpoch() < burn2.getEpoch() ? -1
-					: burn1.getEpoch() == burn2.getEpoch() ? 0 : 1;
 		}
 	}
 
@@ -229,6 +222,89 @@ public class SolarSystem extends Thread {
 		long delta = time - lastTime;
 		lastTime = time;
 		return delta;
+	}
+	
+	private class SolarSystemRenderer implements Renderer {
+		@Override
+		public void initGL() {
+			for (SimObject o : objects) {
+				o.initGL();
+			}
+		}
+
+		@Override
+		public void update() {
+
+			/*
+			 * Add objects to the render update list. Children of all direct
+			 * ancestors are added. Children are also added.
+			 */
+			ArrayList<SimObject> updateObjects = new ArrayList<SimObject>();
+			updateObjects.addAll(sim.getFocus().getChildren());
+			updateObjects.add(sim.getFocus());
+			Body parent = sim.getFocus().parent;
+			while (parent != null) {
+				updateObjects.addAll(parent.getChildren());
+				updateObjects.add(parent);
+				parent = parent.parent;
+			}
+
+			/*
+			 * TODO find a better way for object-specific settings
+			 */
+			for (SimObject o : objects) {
+				if (o instanceof Ship) {
+					o.render(RenderDetail.MAX);
+				} else {
+					o.render(RenderDetail.MAX);
+				}
+			}
+		}
+
+		@Override
+		public void dispose() {
+			for (SimObject o : objects) {
+				o.dispose();
+			}
+		}
+	}
+	
+	private class EventComparator implements Comparator<SimEvent> {
+		@Override
+		public int compare(SimEvent burn1, SimEvent burn2) {
+			return burn1.getEpoch() < burn2.getEpoch() ? -1
+					: burn1.getEpoch() == burn2.getEpoch() ? 0 : 1;
+		}
+	}
+	
+	/**
+	 * @return the current epoch in TAI seconds for the solar system
+	 */
+	public double getEpoch() {
+		return epochTAI;
+	}
+
+	/**
+	 * @param epoch
+	 *            The epoch in TAI time
+	 */
+	public void setEpoch(double epoch) {
+		this.epochTAI = epoch;
+	}
+
+	/**
+	 * @param jd
+	 *            The epoch as a julian date
+	 */
+	public void setEpochJD(double jd) {
+		setEpoch(Time.jdToTAI(jd));
+	}
+
+	/**
+	 * Set the epoch as a date from the gregorian calendar
+	 */
+	public void setEpoch(int yr, int mo, int d, int h, int min, double s) {
+		setEpoch(Time.jdToTAI(Time.getJulianDate(yr, mo, d, h, min, s)));
 	}
 
 	public void setObjects(ArrayList<SimObject> objects) {
@@ -274,51 +350,6 @@ public class SolarSystem extends Thread {
 
 	public ArrayList<SimObject> getObjects() {
 		return objects;
-	}
-
-	private class SolarSystemRenderer implements Renderer {
-		@Override
-		public void initGL() {
-			for (SimObject o : objects) {
-				o.initGL();
-			}
-		}
-
-		@Override
-		public void update() {
-
-			/*
-			 * Add objects to the render update list. Children of all direct
-			 * ancestors are added. Children are also added.
-			 */
-			ArrayList<SimObject> updateObjects = new ArrayList<SimObject>();
-			updateObjects.addAll(sim.getFocus().getChildren());
-			updateObjects.add(sim.getFocus());
-			Body parent = sim.getFocus().parent;
-			while (parent != null) {
-				updateObjects.addAll(parent.getChildren());
-				updateObjects.add(parent);
-				parent = parent.parent;
-			}
-
-			/*
-			 * TODO find a better way for object-specific settings
-			 */
-			for (SimObject o : objects) {
-				if (o instanceof Ship) {
-					o.render(RenderDetail.MAX);
-				} else {
-					o.render(RenderDetail.MAX);
-				}
-			}
-		}
-
-		@Override
-		public void dispose() {
-			for (SimObject o : objects) {
-				o.dispose();
-			}
-		}
 	}
 
 	public Renderer getRenderer() {

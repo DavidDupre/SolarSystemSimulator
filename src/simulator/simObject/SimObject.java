@@ -170,9 +170,6 @@ public abstract class SimObject {
 						.put(vertex.get(2));
 			}
 		} else {
-			// TODO this can be vastly optimized. Only update escapeV
-			// when the ship's orbit changes
-
 			double timeToEscape = Astrophysics.timeToEscape(pos, vel,
 					parent.mu, parent.soiRadius);
 			double timeStep = timeToEscape / (double) BUFFER_SIZE;
@@ -183,17 +180,6 @@ public abstract class SimObject {
 				orbitBuffer.put(vertex.get(0)).put(vertex.get(1))
 						.put(vertex.get(2));
 			}
-
-			// double escapeV = Astrophysics.anomalyToEscape(pos, vel,
-			// parent.mu, parent.soiRadius);
-			// System.out.println("escapeV: " + escapeV);
-			// for (int i = 0; i < orbitBuffer.length; i++) {
-			// VectorND vertex = c.getPosition((i-orbitBuffer.length/2) *
-			// escapeV * 2.0
-			// / (orbitBuffer.length - 1));
-			// vertex.subtract(pos);
-			// orbitBuffer[i] = vertex;
-			// }
 		}
 		orbitBuffer.flip();
 	}

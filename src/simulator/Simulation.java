@@ -44,8 +44,10 @@ public class Simulation {
 		solarSystem = new SolarSystem(this);
 		screen = new Window(this);
 
-		loader = new ScenarioLoader(this, rootFilePath
-				+ "/res/targetScenario2.xml");
+		PropertiesManager.load();
+		String scenarioFilePath = PropertiesManager.getProperty("path");
+		
+		loader = new ScenarioLoader(this, scenarioFilePath);
 		loader.init();
 
 		solarSystem.start();
@@ -74,7 +76,7 @@ public class Simulation {
 	 * Save all the simulation data and settings as a scenario file
 	 */
 	public void export() {
-		String filePath = rootFilePath + "/res/fullScenario.xml";
+		String filePath = PropertiesManager.getProperty("save");
 
 		// Remove contents of file
 		try {

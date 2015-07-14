@@ -9,6 +9,8 @@ import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
 import simulator.astro.Time;
 
+import org.lwjgl.util.glu.Sphere;
+
 import com.pi.math.vector.Vector;
 import com.pi.math.vector.VectorND;
 
@@ -36,7 +38,7 @@ public class Body extends SimObject {
 	public Body() {
 		super();
 		color = new float[] { 1.0f, 1.0f, 1.0f };
-		sphere = new Sphere(radius);
+		sphere = new Sphere();
 		radius = 1.0;
 		mu = Astrophysics.G;
 		mass = 1.0;
@@ -58,7 +60,7 @@ public class Body extends SimObject {
 		super();
 		color = new float[] { 1.0f, 1.0f, 1.0f };
 		lock = new ReentrantLock();
-		sphere = new Sphere(radius);
+		sphere = new Sphere();
 		this.name = name;
 		children = new ArrayList<SimObject>();
 		this.mass = mass;
@@ -83,21 +85,6 @@ public class Body extends SimObject {
 		}
 		updateTo(now);
 	}
-	
-	@Override
-	public void initGL() {
-		vHandle = glGenBuffers();
-		glBindBuffer(GL_ARRAY_BUFFER, vHandle);
-		glBufferData(GL_ARRAY_BUFFER, orbitBuffer,
-				GL_STATIC_DRAW);
-		sphere.initGL();
-	}
-	
-	@Override
-	public void dispose() {
-		glDeleteBuffers(vHandle);
-		sphere.dispose();
-	}
 
 	public ArrayList<SimObject> getChildren() {
 		return children;
@@ -105,6 +92,6 @@ public class Body extends SimObject {
 
 	@Override
 	protected void renderPhysical() {
-		sphere.draw();
+		sphere.draw((float) radius, 16, 16);
 	}
 }

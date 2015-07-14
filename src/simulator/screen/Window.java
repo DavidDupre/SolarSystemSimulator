@@ -10,15 +10,15 @@ import simulator.Simulation;
 import simulator.simObject.SimObject;
 
 public class Window {
-	private static final int WIDTH = 1920 / 2;
-	private static final int HEIGHT = 1080 / 2;
+	private static final int WIDTH = 960;
+	private static final int HEIGHT = 540;
 	
 	private Simulation sim;
 	
 	private Renderer renderer;
 	private InputThread input;
 	public Camera camera;
-
+	
 	public Window(Simulation sim) {
 		this.sim = sim;
 
@@ -45,8 +45,6 @@ public class Window {
 
 		renderer.initGL();
 		
-		input.start();
-		
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST); // Enables Depth Testing
 		glDepthFunc(GL_LEQUAL); // The Type Of Depth Test To Do
@@ -66,6 +64,8 @@ public class Window {
 				renderer.update();
 				focus.superLock(false);
 			}
+			
+			input.pollInput();
 			
 			Display.update();
 			Display.sync(60);

@@ -1,85 +1,163 @@
 package simulator.screen;
 
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.glu.GLU;
 
 import simulator.Simulation;
+import simulator.simObject.SimObject;
 
-public class InputThread extends Thread {
-	private Thread thread;
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
+public class InputThread {
 	private Simulation sim;
 	private Camera cam;
 
-	private int focusIndex;
+	private FloatBuffer model;
+	private FloatBuffer projection;
+	private IntBuffer viewport;
+	
+	/*
+	 * Within this many pixels = valid selection
+	 */
+	private static final int SELECTION_THRESHOLD = 20;
 
+	/**
+	 * This isn't a real thread anymore. It needs to make OpenGL calls.
+	 * 
+	 * @param sim
+	 * @param cam
+	 */
 	public InputThread(Simulation sim, Camera cam) {
 		this.sim = sim;
 		this.cam = cam;
+
+		model = BufferUtils.createFloatBuffer(16);
+		projection = BufferUtils.createFloatBuffer(16);
+		viewport = BufferUtils.createIntBuffer(16);
 	}
 
-	@Override
-	public void run() {
-		try {
-			while (!Display.isCloseRequested()) {
-				if (Mouse.isButtonDown(1)) {
-					int mouseDX = Mouse.getDX();
-					int mouseDY = Mouse.getDY();
-					if ((mouseDY > 0 && cam.pitch < 0)
-							|| (mouseDY < 0 && cam.pitch > -180)) {
-						cam.pitch += mouseDY / 1.5;
-					}
-					cam.yaw += mouseDX / 2.0;
-				}
+	public void pollInput() {
+		if (Mouse.isButtonDown(1)) {
+			int mouseDX = Mouse.getDX();
+			int mouseDY = Mouse.getDY();
+			if ((mouseDY > 0 && cam.pitch < 0)
+					|| (mouseDY < 0 && cam.pitch > -180)) {
+				cam.pitch += mouseDY / 1.5;
+			}
+			cam.yaw += mouseDX / 2.0;
+		}
 
-				double zoom = Mouse.getDWheel()
-						* (Math.abs(cam.centerDistance) / 1000);
-				cam.centerDistance -= zoom;
-				if (cam.centerDistance < 1) {
-					cam.centerDistance = 1;
-				}
+		double zoom = Mouse.getDWheel() * (Math.abs(cam.centerDistance) / 1000);
+		cam.centerDistance -= zoom;
+		if (cam.centerDistance < 1) {
+			cam.centerDistance = 1;
+		}
 
-				while (Keyboard.next()) {
-					if (Keyboard.getEventKeyState()) {
-						switch (Keyboard.getEventKey()) {
-						case Keyboard.KEY_LBRACKET:
-							focusIndex--;
-							if (focusIndex < 0) {
-								focusIndex = sim.solarSystem.getObjects()
-										.size() - 1;
-							}
-							sim.setFocus(sim.solarSystem.getObjects().get(
-									focusIndex));
-							break;
-						case Keyboard.KEY_RBRACKET:
-							focusIndex++;
-							if (focusIndex >= sim.solarSystem.getObjects()
-									.size()) {
-								focusIndex = 0;
-							}
-							sim.setFocus(sim.solarSystem.getObjects().get(
-									focusIndex));
-							break;
-						case Keyboard.KEY_COMMA:
-							sim.simSpeed *= .5;
-							break;
-						case Keyboard.KEY_PERIOD:
-							sim.simSpeed *= 2.0;
-							break;
-						}
+		while (Mouse.next()) {
+			if (Mouse.getEventButton() > -1) {
+				if (!Mouse.getEventButtonState()) {
+					switch (Mouse.getEventButton()) {
+					case 0:
+						Vector screenPos = new VectorND(Mouse.getX(), Mouse.getY());
+						SimObject selection = getClosestObject(screenPos);
+						sim.setFocus(selection);
+						break;
 					}
 				}
 			}
-		} catch (IllegalStateException e) {
-			// ayy lmao
+		}
+
+		while (Keyboard.next()) {
+			if (Keyboard.getEventKeyState()) {
+				switch (Keyboard.getEventKey()) {
+				case Keyboard.KEY_LBRACKET:
+					int focusIndex = sim.solarSystem.getObjects().indexOf(sim.getFocus());
+					focusIndex--;
+					if (focusIndex < 0) {
+						focusIndex = sim.solarSystem.getObjects().size() - 1;
+					}
+					sim.setFocus(sim.solarSystem.getObjects().get(focusIndex));
+					break;
+				case Keyboard.KEY_RBRACKET:
+					focusIndex = sim.solarSystem.getObjects().indexOf(sim.getFocus());
+					focusIndex++;
+					if (focusIndex >= sim.solarSystem.getObjects().size()) {
+						focusIndex = 0;
+					}
+					sim.setFocus(sim.solarSystem.getObjects().get(focusIndex));
+					break;
+				case Keyboard.KEY_COMMA:
+					sim.simSpeed *= .5;
+					break;
+				case Keyboard.KEY_PERIOD:
+					sim.simSpeed *= 2.0;
+					break;
+				}
+			}
 		}
 	}
 
-	public void start() {
-		if (thread == null) {
-			thread = new Thread(this);
-			thread.setName("Input");
-			thread.start();
+	private void recalculateMatrices() {
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, model);
+		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projection);
+		GL11.glGetInteger(GL11.GL_VIEWPORT, viewport);
+	}
+	
+	public SimObject getClosestObject(Vector cursorPos) {
+		ArrayList<SimObject> candidates = sim.getFocus().getFamily();
+		
+		double min = Double.MAX_VALUE;
+		SimObject closest = sim.getFocus();
+		for(SimObject o: candidates) {
+			Vector pos = getScreenPos(o.getAbsolutePos());
+			double dist = pos.subtract(cursorPos).magnitude();
+			if(dist < min) {
+				min = dist;
+				closest = o;
+			}
 		}
+		if(min > SELECTION_THRESHOLD) {
+			return sim.getFocus();
+		}
+		
+		return closest;
+	}
+
+	/**
+	 * 
+	 * @param worldPos
+	 * @return two-dimensional vector of screen position
+	 */
+	public Vector getScreenPos(Vector worldPos) {
+		recalculateMatrices();
+
+		FloatBuffer winPos = BufferUtils.createFloatBuffer(3);
+		GLU.gluProject((float) worldPos.get(0), (float) worldPos.get(1),
+				(float) worldPos.get(2), model, projection, viewport, winPos);
+		
+		return new VectorND(winPos.get(0), winPos.get(1));
+	}
+
+	public Vector getWorldPos(int mouseX, int mouseY) {
+		recalculateMatrices();
+
+		FloatBuffer winZ = BufferUtils.createFloatBuffer(1);
+		GL11.glReadPixels(mouseX, mouseY, 1, 1, GL11.GL_DEPTH_COMPONENT,
+				GL11.GL_FLOAT, winZ);
+		FloatBuffer pos = BufferUtils.createFloatBuffer(3);
+		GLU.gluUnProject(mouseX, mouseY, winZ.get(0), model, projection,
+				viewport, pos);
+
+		// Here's where I would use VectorBuff3... if I weren't using
+		// DoubleBuffers
+		return new VectorND(pos.get(0), pos.get(1), pos.get(2));
 	}
 }

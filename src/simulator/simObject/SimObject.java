@@ -48,8 +48,7 @@ public abstract class SimObject {
 	public void initGL() {
 		vHandle = glGenBuffers();
 		glBindBuffer(GL_ARRAY_BUFFER, vHandle);
-		glBufferData(GL_ARRAY_BUFFER, orbitBuffer,
-				GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, orbitBuffer, GL_STATIC_DRAW);
 	}
 
 	public void dispose() {
@@ -192,7 +191,7 @@ public abstract class SimObject {
 		update(timeTAI - lastUpdatedTime);
 		lastUpdatedTime = timeTAI;
 	}
-	
+
 	public Vector getRelativePos() {
 		if (parent == null) {
 			return pos;
@@ -206,11 +205,11 @@ public abstract class SimObject {
 		}
 		return ((VectorND) vel).clone().subtract(parent.vel);
 	}
-	
+
 	public Vector getRelativePos(SimObject o) {
 		return getAbsolutePos().subtract(o.getAbsolutePos());
 	}
-	
+
 	public Vector getRelativeVel(SimObject o) {
 		return getAbsoluteVel().subtract(o.getAbsoluteVel());
 	}
@@ -238,5 +237,22 @@ public abstract class SimObject {
 		} else {
 			lock.unlock();
 		}
+	}
+
+	/*
+	 * Children of all direct ancestors are added. Children are also added.
+	 */
+	public ArrayList<SimObject> getFamily() {
+		ArrayList<SimObject> family = new ArrayList<SimObject>();
+		family.addAll(getChildren());
+		family.add(this);
+		Body nextParent = this.parent;
+		while (nextParent != null) {
+			family.addAll(nextParent.getChildren());
+			family.add(nextParent);
+			nextParent = nextParent.parent;
+		}
+
+		return family;
 	}
 }

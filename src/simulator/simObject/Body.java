@@ -3,7 +3,6 @@ package simulator.simObject;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.lwjgl.opengl.GL15.*;
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;

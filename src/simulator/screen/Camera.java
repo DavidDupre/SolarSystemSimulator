@@ -13,6 +13,12 @@ public class Camera {
 	public float yaw;
 	private double scale;
 	private Vector pos;
+	private Vector target;
+	private Vector lastTarget;
+	
+	private boolean locked = true;
+	
+	private static final float MOVE_P = .15f;
 
 	public Camera() {
 		centerDistance = 100f;
@@ -20,6 +26,8 @@ public class Camera {
 		yaw = 0f;
 		scale = 1.0;
 		pos = new VectorND(0,0,0);
+		target = new VectorND(0,0,0);
+		lastTarget = new VectorND(0,0,0);
 	}
 
 	/**
@@ -28,7 +36,23 @@ public class Camera {
 	 * @param pos
 	 */
 	public void lookAt(Vector pos) {
-		this.pos = pos;
+		if(locked) {
+			this.pos = pos;
+		} else {
+			lastTarget = target;
+			this.target = pos;
+			update();
+		}
+	}
+	
+	private void update() {
+		pos.add(((VectorND) target).clone().subtract(lastTarget));
+		Vector dif = ((VectorND) target).clone().subtract(pos);
+		pos.add(dif.multiply(MOVE_P));
+		if(dif.magnitude() < 1E4) {
+			// TODO pls no hardcoderino
+			locked = true;
+		}
 	}
 
 	/**
@@ -51,5 +75,10 @@ public class Camera {
 		this.pitch = pitch;
 		this.yaw = yaw;
 		this.centerDistance = zoom;
+	}
+	
+	public void updateFocus(Vector newTarget) {
+		locked = false;
+		target = newTarget;
 	}
 }

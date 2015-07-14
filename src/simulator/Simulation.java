@@ -65,6 +65,7 @@ public class Simulation {
 	public void setFocus(SimObject focus) {
 		if (focus != null) {
 			this.focus = focus;
+			this.screen.camera.updateFocus(focus.getAbsolutePos());
 		}
 	}
 

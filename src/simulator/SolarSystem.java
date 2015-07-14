@@ -179,15 +179,7 @@ public class SolarSystem extends Thread {
 			 * Add objects to the render update list. Children of all direct
 			 * ancestors are added. Children are also added.
 			 */
-			ArrayList<SimObject> updateObjects = new ArrayList<SimObject>();
-			updateObjects.addAll(sim.getFocus().getChildren());
-			updateObjects.add(sim.getFocus());
-			Body parent = sim.getFocus().parent;
-			while (parent != null) {
-				updateObjects.addAll(parent.getChildren());
-				updateObjects.add(parent);
-				parent = parent.parent;
-			}
+			ArrayList<SimObject> updateObjects = sim.getFocus().getFamily();
 
 			/* Update the simObjects */
 			double lastEpoch = epochTAI;
@@ -239,15 +231,7 @@ public class SolarSystem extends Thread {
 			 * Add objects to the render update list. Children of all direct
 			 * ancestors are added. Children are also added.
 			 */
-			ArrayList<SimObject> updateObjects = new ArrayList<SimObject>();
-			updateObjects.addAll(sim.getFocus().getChildren());
-			updateObjects.add(sim.getFocus());
-			Body parent = sim.getFocus().parent;
-			while (parent != null) {
-				updateObjects.addAll(parent.getChildren());
-				updateObjects.add(parent);
-				parent = parent.parent;
-			}
+			ArrayList<SimObject> updateObjects = sim.getFocus().getFamily();
 
 			/*
 			 * TODO find a better way for object-specific settings

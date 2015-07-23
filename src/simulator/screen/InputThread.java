@@ -125,7 +125,7 @@ public class InputThread {
 			}
 		}
 		if(min > SELECTION_THRESHOLD) {
-			return sim.getFocus();
+			return null;
 		}
 		
 		return closest;

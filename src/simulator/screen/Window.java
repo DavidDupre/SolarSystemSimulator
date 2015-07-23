@@ -4,14 +4,14 @@ import static org.lwjgl.opengl.GL11.*;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.DisplayMode;
+import org.lwjgl.opengl.GL11;
 
 import simulator.Simulation;
 import simulator.simObject.SimObject;
 
 public class Window {
-	private static final int WIDTH = 960;
-	private static final int HEIGHT = 540;
+	private int width = 960;
+	private int height = 540;
 	
 	private Simulation sim;
 	
@@ -29,7 +29,7 @@ public class Window {
 		
 		input = new InputThread(sim, camera);
 		
-		gui = new GUI(WIDTH, HEIGHT);
+		gui = new GUI(this, width, height);
 	}
 
 	public void setRenderer(Renderer renderer) {
@@ -37,19 +37,19 @@ public class Window {
 	}
 
 	public void run() {
+		gui.addDisplayToCanvas();
+		gui.setVisible(true);
+		
 		try {
-			Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
-			Display.setTitle("Solar System Simulator");
+			Display.setResizable(true);
 			Display.create();
 		} catch (LWJGLException e) {
 			e.printStackTrace();
 			Display.destroy();
 			System.exit(1);
 		}
-
-//		gui.setVisible(true);
+		
 		renderer.initGL();
-//		gui.addDisplayToCanvas();
 		
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST); // Enables Depth Testing
@@ -86,10 +86,17 @@ public class Window {
 	 * Called in the update loop to keep 3D views working
 	 */
 	private void updateGL() {
+		GL11.glViewport(0, 0, width, height);
+		
 		glMatrixMode(GL_PROJECTION); // Select The Projection Matrix
 		glLoadIdentity(); // Reset The Projection Matrix
 
-		float aspect = (float) HEIGHT / (float) WIDTH;
+		float aspect = (float) height / (float) width;
 		glFrustum(-.5, .5, aspect * .5, aspect * -.5, 1.0, 1000000000.0);
+	}
+	
+	public void setSize(int width, int height) {
+		this.width = width;
+		this.height = height;
 	}
 }

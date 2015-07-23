@@ -53,7 +53,7 @@ public class SolarSystem extends Thread {
 
 		bufferEvents();
 
-		System.out.println("\n\nStarting live simulation\n\n");
+		System.out.println("\nStarting live simulation\n");
 
 		displayLiveSimulation();
 	}

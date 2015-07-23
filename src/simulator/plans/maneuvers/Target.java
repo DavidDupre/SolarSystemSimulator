@@ -210,16 +210,16 @@ public class Target extends Maneuver {
 
 		Burn burnA = new Burn(this, ship.lastUpdatedTime + minDelay, new Command() {
 			@Override
-			public void run() {
-				ship.vel.add(deltaVA);
+			public Vector getDeltaV() {
+				return deltaVA;
 			}
 		});
 
 		Burn burnB = new Burn(this, ship.lastUpdatedTime + minDelay + timeOfMinOfMin,
 				new Command() {
 					@Override
-					public void run() {
-						ship.vel.add(deltaVB);
+					public Vector getDeltaV() {
+						return deltaVB;
 					}
 				});
 

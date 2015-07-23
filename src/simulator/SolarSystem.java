@@ -2,9 +2,6 @@ package simulator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-
-import com.pi.math.vector.Vector;
 
 import simulator.astro.Astrophysics;
 import simulator.astro.Time;
@@ -35,14 +32,16 @@ public class SolarSystem extends Thread {
 	private double epochTAI = Double.NaN;
 
 	private ArrayList<SimEvent> events;
-	private EventComparator bComp;
+	private EventComparator eComp;
+	private ReverseEventComparator eCompRev;
 
 	public SolarSystem(Simulation sim) {
 		renderer = new SolarSystemRenderer();
 		objects = new ArrayList<SimObject>();
 		this.sim = sim;
 		events = new ArrayList<SimEvent>();
-		bComp = new EventComparator();
+		eComp = new EventComparator();
+		eCompRev = new ReverseEventComparator();
 	}
 
 	@Override
@@ -53,39 +52,35 @@ public class SolarSystem extends Thread {
 		}
 
 		bufferEvents();
-		
+
 		System.out.println("\n\nStarting live simulation\n\n");
-		
+
 		displayLiveSimulation();
 	}
 
 	private void bufferEvents() {
 		ArrayList<SimEvent> deadEvents = new ArrayList<SimEvent>();
-		HashMap<Ship, Body> initParents = new HashMap<Ship, Body>();
-		HashMap<Ship, Vector[]> initStates = new HashMap<Ship, Vector[]>();
-		
+
 		// Create list of ships
 		ArrayList<Ship> ships = new ArrayList<Ship>();
 		for (SimObject o : objects) {
 			if (o instanceof Ship) {
 				Ship s = (Ship) o;
 				ships.add(s);
-				initParents.put(s, s.parent);
-				initStates.put(s, new Vector[]{s.pos, s.vel});
 			}
 		}
 
 		// Create list of burns and initialize first maneuvers
 		events = new ArrayList<SimEvent>();
 		for (Ship s : ships) {
-			if (!s.getPlan().getManeuvers().isEmpty()) {
-				Maneuver m = s.getPlan().getManeuvers().get(0);
+			if (!s.getManeuvers().isEmpty()) {
+				Maneuver m = s.getManeuvers().get(0);
 				m.init();
 				events.addAll(m.burns);
 			}
 		}
-		bComp = new EventComparator();
-		events.sort(bComp);
+		eComp = new EventComparator();
+		events.sort(eComp);
 
 		// Cycle through events
 		while (!events.isEmpty()) {
@@ -93,7 +88,7 @@ public class SolarSystem extends Thread {
 			for (SimObject o : objects) {
 				o.updateTo(e.getEpoch());
 			}
-			
+
 			e.execute();
 			events.remove(e);
 			deadEvents.add(e);
@@ -106,46 +101,27 @@ public class SolarSystem extends Thread {
 				// Handle maneuver initialization
 				if (b.isLast()) {
 					ArrayList<Maneuver> maneuvers = b.maneuver.getShip()
-							.getPlan().getManeuvers();
+							.getManeuvers();
 					int nextIndex = maneuvers.indexOf(b.maneuver) + 1;
 					if (maneuvers.size() > nextIndex) {
 						Maneuver nextM = maneuvers.get(nextIndex);
 						nextM.init();
 						events.addAll(nextM.burns);
-						events.sort(bComp);
-					}
-				}
-			} else if (e instanceof SOIChange) {
-				// Check for other events with the same ship. After a SOIChange,
-				// those changes are irrelevant
-				for (SimEvent e2 : events) {
-					if (e2.getShip().equals(e.getShip()) && e2 instanceof SOIChange) {
-						events.remove(e2);
+						events.sort(eComp);
 					}
 				}
 			}
 		}
-		
+
 		// Resurrect the events for use in the live simulation
 		events = deadEvents;
-		
-		// Reverse time and restore ships to initial states
-		for(SimObject o: objects) {
-			o.updateTo(simStartTimeTAI);
-		}
-		for(Ship s: ships) {
-			s.setParent(initParents.get(s));
-			Vector[] initState = initStates.get(s);
-			s.pos = initState[0];
-			s.vel = initState[1];
-		}
+
+		updateTo(simStartTimeTAI);
 	}
 
 	/**
 	 * Must be called after any change is made to the simulation (other than
 	 * updating it). This checks for SOI changes.
-	 * 
-	 * TODO use some sort of listener to do this automatically?
 	 */
 	private void refreshSimState(Ship s) {
 		// Check sibling case
@@ -156,7 +132,7 @@ public class SolarSystem extends Thread {
 				if (timeToIntercept > 0) {
 					events.add(new SOIChange(s, body, s.lastUpdatedTime
 							+ timeToIntercept));
-					events.sort(bComp);
+					events.sort(eComp);
 				}
 			}
 		}
@@ -166,40 +142,45 @@ public class SolarSystem extends Thread {
 					s.parent.mu, s.parent.soiRadius);
 			events.add(new SOIChange(s, s.parent.parent, s.lastUpdatedTime
 					+ timeToEscape));
-			events.sort(bComp);
+			events.sort(eComp);
 		}
 	}
 
 	private void displayLiveSimulation() {
-		// Live simulation
-		int eventIndex = 0;
-		SimEvent currentEvent = events.get(eventIndex);
 		while (true) {
-			/*
-			 * Add objects to the render update list. Children of all direct
-			 * ancestors are added. Children are also added.
-			 */
-			ArrayList<SimObject> updateObjects = sim.getFocus().getFamily();
-
-			/* Update the simObjects */
-			double lastEpoch = epochTAI;
 			updateEpoch();
-			while(epochTAI > currentEvent.getEpoch() && eventIndex < events.size()) {
-				for (SimObject o : objects) {
-					o.updateTo(currentEvent.getEpoch());
-				}
-				currentEvent.execute();
-				eventIndex++;
-				if(eventIndex < events.size()) {
-					currentEvent = events.get(eventIndex);
-				}
+			updateTo(epochTAI);
+		}
+	}
+
+	public void updateTo(double epoch) {
+		// TODO This method of looking for events seems wasteful
+		ArrayList<SimEvent> forwardEvents = new ArrayList<SimEvent>();
+		ArrayList<SimEvent> reverseEvents = new ArrayList<SimEvent>();
+		for (SimEvent e : events) {
+			if (epoch >= e.getEpoch() && !e.isFinished()) {
+				forwardEvents.add(e);
+			} else if (epoch <= e.getEpoch() && e.isFinished()) {
+				reverseEvents.add(e);
 			}
+		}
+		forwardEvents.sort(eComp);
+		reverseEvents.sort(eCompRev);
+		for (SimEvent e : forwardEvents) {
 			for (SimObject o : objects) {
-				o.updateTo(epochTAI);
+				o.updateTo(e.getEpoch());
 			}
-			
-			// System.out.println("physics fps: " +
-			// (Simulation.SIM_SPEED/(epochTAI-lastEpoch)));
+			e.execute();
+		}
+		for (SimEvent e : reverseEvents) {
+			for (SimObject o : objects) {
+				o.updateTo(e.getEpoch());
+			}
+			e.reverse();
+		}
+
+		for (SimObject o : objects) {
+			o.updateTo(epoch);
 		}
 	}
 
@@ -215,7 +196,7 @@ public class SolarSystem extends Thread {
 		lastTime = time;
 		return delta;
 	}
-	
+
 	private class SolarSystemRenderer implements Renderer {
 		@Override
 		public void initGL() {
@@ -226,22 +207,8 @@ public class SolarSystem extends Thread {
 
 		@Override
 		public void update() {
-
-			/*
-			 * Add objects to the render update list. Children of all direct
-			 * ancestors are added. Children are also added.
-			 */
-			ArrayList<SimObject> updateObjects = sim.getFocus().getFamily();
-
-			/*
-			 * TODO find a better way for object-specific settings
-			 */
 			for (SimObject o : objects) {
-				if (o instanceof Ship) {
-					o.render(RenderDetail.MAX);
-				} else {
-					o.render(RenderDetail.MAX);
-				}
+				o.render(RenderDetail.MAX);
 			}
 		}
 
@@ -252,7 +219,7 @@ public class SolarSystem extends Thread {
 			}
 		}
 	}
-	
+
 	private class EventComparator implements Comparator<SimEvent> {
 		@Override
 		public int compare(SimEvent burn1, SimEvent burn2) {
@@ -260,7 +227,15 @@ public class SolarSystem extends Thread {
 					: burn1.getEpoch() == burn2.getEpoch() ? 0 : 1;
 		}
 	}
-	
+
+	private class ReverseEventComparator implements Comparator<SimEvent> {
+		@Override
+		public int compare(SimEvent burn1, SimEvent burn2) {
+			return burn1.getEpoch() < burn2.getEpoch() ? 1
+					: burn1.getEpoch() == burn2.getEpoch() ? 0 : -1;
+		}
+	}
+
 	/**
 	 * @return the current epoch in TAI seconds for the solar system
 	 */

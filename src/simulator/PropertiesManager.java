@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 public class PropertiesManager {
@@ -14,11 +15,16 @@ public class PropertiesManager {
 	private static final String PATH = "/res/config.properties";
 
 	public static void load() {
-		File jarPath = new File(PropertiesManager.class.getProtectionDomain()
-				.getCodeSource().getLocation().getPath());
-		File rootDirectory = jarPath.getParentFile();
-		file = new File(rootDirectory + PATH);
-		prop = new Properties();
+		File jarPath;
+		try {
+			jarPath = new File(PropertiesManager.class.getProtectionDomain()
+					.getCodeSource().getLocation().toURI().getPath());
+			File rootDirectory = jarPath.getParentFile();
+			file = new File(rootDirectory + PATH);
+			prop = new Properties();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static String getProperty(String key) {
@@ -43,6 +49,7 @@ public class PropertiesManager {
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.out.println("failed to set property due to IOException");
 		}
 	}
 }

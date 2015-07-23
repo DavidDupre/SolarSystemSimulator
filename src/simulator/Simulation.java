@@ -43,11 +43,8 @@ public class Simulation {
 	public void start() {
 		solarSystem = new SolarSystem(this);
 		screen = new Window(this);
-
-		PropertiesManager.load();
-		String scenarioFilePath = PropertiesManager.getProperty("path");
 		
-		loader = new ScenarioLoader(this, scenarioFilePath);
+		loader = new ScenarioLoader(this, getScenarioPath());
 		loader.init();
 
 		solarSystem.start();
@@ -55,11 +52,36 @@ public class Simulation {
 		screen.setRenderer(solarSystem.getRenderer());
 		screen.run();
 
-		System.out.println("exporting simulation");
-		export();
-		System.out.println("export complete");
+//		System.out.println("exporting simulation");
+//		export();
+//		System.out.println("export complete");
 
 		System.exit(0);
+	}
+	
+	public String getScenarioPath() {
+		PropertiesManager.load();
+		String scenarioFilePath = PropertiesManager.getProperty("path");
+		File file = new File(scenarioFilePath);
+		if(!file.exists()){
+			File res = new File(rootFilePath + "\\res");
+			File[] files = res.listFiles();
+			try {
+				for(int i=0; i<files.length; i++) {
+					String name = files[i].getName();
+					if(name.endsWith("xml")) {
+						scenarioFilePath = files[i].getAbsolutePath();
+					}
+				}
+				PropertiesManager.setProperty("path", scenarioFilePath);
+				System.out.println("Using " + scenarioFilePath + " as scenario filepath");
+			} catch (NullPointerException e) {
+				System.out.println("res path not found");
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+		return scenarioFilePath;
 	}
 
 	public void setFocus(SimObject focus) {
@@ -68,7 +90,7 @@ public class Simulation {
 			this.screen.camera.updateFocus(focus.getAbsolutePos());
 		}
 	}
-
+	
 	public SimObject getFocus() {
 		return focus;
 	}
@@ -105,7 +127,7 @@ public class Simulation {
 				if (((Ship) o).storeRaw) {
 					editor.addObject(o);
 				}
-				editor.addPlan(((Ship) o).getPlan());
+				editor.addPlan(((Ship) o).getManeuvers());
 			}
 		}
 

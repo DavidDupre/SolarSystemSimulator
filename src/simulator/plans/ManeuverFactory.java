@@ -6,7 +6,6 @@ import java.util.HashMap;
 
 import simulator.Simulation;
 import simulator.plans.maneuvers.Bielliptic;
-import simulator.plans.maneuvers.Circularize;
 import simulator.plans.maneuvers.Direct;
 import simulator.plans.maneuvers.Hohmann;
 import simulator.plans.maneuvers.Incline;
@@ -32,7 +31,6 @@ public class ManeuverFactory {
 		classMap.put("WaitCommand", WaitCommand.class);
 		classMap.put("Bielliptic", Bielliptic.class);
 		classMap.put("OneTangent", OneTangent.class);
-		classMap.put("Circularize", Circularize.class);
 		classMap.put("Direct", Direct.class);
 		classMap.put("Target", Target.class);
 	}

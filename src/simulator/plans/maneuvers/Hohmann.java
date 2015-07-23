@@ -86,19 +86,19 @@ public class Hohmann extends Maneuver {
 
 		Burn burnA = new Burn(this, executeEpoch, new Command() {
 			@Override
-			public void run() {
+			public Vector getDeltaV() {
 				Vector deltaVA = ((VectorND) ship.vel).clone().normalize()
 						.multiply(deltaVAMag);
-				ship.vel.add(deltaVA);
+				return deltaVA;
 			}
 		});
 
 		Burn burnB = new Burn(this, executeEpoch + tTrans, new Command() {
 			@Override
-			public void run() {
+			public Vector getDeltaV() {
 				Vector deltaVB = ((VectorND) ship.vel).clone().normalize()
 						.multiply(deltaVBMag);
-				ship.vel.add(deltaVB);
+				return deltaVB;
 			}
 		});
 

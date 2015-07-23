@@ -3,6 +3,9 @@ package simulator.plans.maneuvers;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.pi.math.vector.Vector;
+import com.pi.math.vector.VectorND;
+
 import simulator.Simulation;
 import simulator.plans.Burn;
 import simulator.plans.Maneuver;
@@ -35,8 +38,9 @@ public class WaitCommand extends Maneuver {
 	public void init() {
 		burns.add(new Burn(this, ship.lastUpdatedTime + waitTime, new Command() {
 			@Override
-			public void run() {
-				// ayy lmao
+			public Vector getDeltaV() {
+				// TODO this is kinda dumb
+				return new VectorND(0,0,0);
 			}
 		}));
 	}

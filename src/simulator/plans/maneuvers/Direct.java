@@ -44,8 +44,8 @@ public class Direct extends Maneuver {
 		
 		Burn burn = new Burn(this, ship.lastUpdatedTime, new Command() {
 			@Override
-			public void run() {
-				ship.vel.add(vel);
+			public Vector getDeltaV() {
+				return vel;
 			}
 		});
 		

@@ -57,27 +57,27 @@ public class Bielliptic extends Maneuver {
 
 		burns.add(new Burn(this, ship.lastUpdatedTime, new Command() {
 			@Override
-			public void run() {
+			public Vector getDeltaV() {
 				Vector delta = ((VectorND) ship.vel).clone().normalize().multiply(deltaVA);
-				ship.vel.add(delta);
+				return delta;
 			}
 		}));
 
 		burns.add(new Burn(this, ship.lastUpdatedTime + tTrans1, new Command() {
 			@Override
-			public void run() {
+			public Vector getDeltaV() {
 				Vector delta = ((VectorND) ship.vel).clone().normalize().multiply(deltaVB);
-				ship.vel.add(delta);
+				return delta;
 			}
 		}));
 
 		burns.add(new Burn(this, ship.lastUpdatedTime + tTrans1 + tTrans2,
 				new Command() {
 					@Override
-					public void run() {
+					public Vector getDeltaV() {
 						Vector delta = ((VectorND) ship.vel).clone().normalize()
 								.multiply(deltaVC);
-						ship.vel.add(delta);
+						return delta;
 					}
 				}));
 	}

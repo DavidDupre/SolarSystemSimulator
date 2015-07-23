@@ -1,20 +1,18 @@
 <?xml version="1.0"?>
 <scenerio>
 	<focus>Earth</focus>
-	<speed>2E3</speed>
-	<epoch type="gregorian" yr="2015" mo="6" d="27" h="0" min="0" s="0"></epoch>
+	<speed>1E3</speed>
+	<camera pitch="-127.33335" yaw="-176.0" zoom="46.238007"/>
 	<group type="body" path="/res/solarSystem.csv"></group>
-	<group type="ship" category="stations"></group>
-	<object type="ship" name="Swordfish" parent="Mars">
-		<state type="orbit" a="1E7" i="50" e=".01" peri="0" node="0" v="0"></state>
-		<epoch type="jd" day="2000000"></epoch>
+	<object name="test1" parent="Earth" type="ship">
+		<state type="orbit" a="1E7" i="0" e="0" peri="0" node="0" v="0"></state>
 	</object>
-	<plan name="ISS (ZARYA)">
-		<command type="Incline">
-			<param i="0"></param>
-		</command>
+	<plan name="test1">
 		<command type="Hohmann">
-			<param r="1E7"></param>
+			<param r="3E7"></param>
+		</command>
+		<command type="Incline">
+			<param i="89"></param>
 		</command>
 	</plan>
 </scenerio>

@@ -15,6 +15,7 @@ import com.pi.math.vector.VectorND;
 
 public class Incline extends Maneuver {
 	private double i_final;
+	private double i_initial;
 
 	/**
 	 * Change the inclination at the next orbit node. Currently only works at
@@ -84,21 +85,21 @@ public class Incline extends Maneuver {
 		double cos_fpa = h.magnitude() / (r * v);
 
 		deltaV = Math.abs(2.0 * v * cos_fpa * Math.sin(deltaI / 2.0));
+		
+		Vector[] initState = Astrophysics.kepler(ship.pos, ship.vel, ship.parent.mu, timeToNode);
+		Orbit initOrb = Astrophysics.toOrbitalElements(initState[0], initState[1],
+				ship.parent.mu);
+		initOrb.i = i_final;
+		Vector[] finalState = Astrophysics.toRV(initOrb, ship.parent.mu, false);
+		final Vector delta = ((VectorND) finalState[1]).clone().subtract(initState[1]);
 
 		/*
-		 * Create the burn TODO use actual epoch instead of lastUpdatedTime
+		 * Create the burn
 		 */
 		burns.add(new Burn(this, ship.lastUpdatedTime + timeToNode, new Command() {
 			@Override
-			public void run() {
-				Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel,
-						ship.parent.mu);
-				orb.i = i_final;
-				Vector[] newState = Astrophysics.toRV(orb, ship.parent.mu,
-						false);
-				// TODO ideally it shouldn't have to change position
-				ship.pos = newState[0];
-				ship.vel = newState[1];
+			public Vector getDeltaV() {
+				return delta;
 			}
 		}));
 	}

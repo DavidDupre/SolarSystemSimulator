@@ -19,6 +19,8 @@ public class Window {
 	private InputThread input;
 	public Camera camera;
 	
+	private GUI gui;
+	
 	public Window(Simulation sim) {
 		this.sim = sim;
 
@@ -26,6 +28,8 @@ public class Window {
 		camera.setScale(1E-6);
 		
 		input = new InputThread(sim, camera);
+		
+		gui = new GUI(WIDTH, HEIGHT);
 	}
 
 	public void setRenderer(Renderer renderer) {
@@ -43,7 +47,9 @@ public class Window {
 			System.exit(1);
 		}
 
+//		gui.setVisible(true);
 		renderer.initGL();
+//		gui.addDisplayToCanvas();
 		
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST); // Enables Depth Testing
@@ -80,13 +86,10 @@ public class Window {
 	 * Called in the update loop to keep 3D views working
 	 */
 	private void updateGL() {
-		int width = Display.getDisplayMode().getWidth();
-		int height = Display.getDisplayMode().getHeight();
-
 		glMatrixMode(GL_PROJECTION); // Select The Projection Matrix
 		glLoadIdentity(); // Reset The Projection Matrix
 
-		float aspect = (float) height / (float) width;
+		float aspect = (float) HEIGHT / (float) WIDTH;
 		glFrustum(-.5, .5, aspect * .5, aspect * -.5, 1.0, 1000000000.0);
 	}
 }

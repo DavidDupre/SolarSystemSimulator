@@ -1,10 +1,11 @@
 package simulator.simObject;
 
+import java.util.ArrayList;
+
 import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
 import simulator.astro.Time;
-import simulator.plans.FlightPlan;
 import simulator.plans.Maneuver;
 import simulator.tle.TLE;
 
@@ -12,19 +13,19 @@ import com.pi.math.vector.Vector;
 
 public class Ship extends SimObject {
 
-	private FlightPlan plan;
-
 	/*
 	 * Regarding the source of the ship. Raw means storing its vectors. The data
 	 * should be stored raw if it was like that originally. It should also be
 	 * stored raw if the orbit has changed from its original TLE.
 	 */
 	public boolean storeRaw = false;
+	
+	private ArrayList<Maneuver> maneuvers;
 
 	public Ship(TLE tle, Body parent) {
 		super();
 		color = new float[] { 1.0f, .2f, .2f };
-		plan = new FlightPlan(this);
+		maneuvers = new ArrayList<Maneuver>();
 		name = tle.name;
 		setParent(parent);
 		this.orb = tle.getOrbit();
@@ -51,7 +52,7 @@ public class Ship extends SimObject {
 	public Ship(String name, Vector[] state, Body parent, double epoch) {
 		super();
 		color = new float[] { 1.0f, .2f, .2f };
-		plan = new FlightPlan(this);
+		maneuvers = new ArrayList<Maneuver>();
 		this.name = name;
 		setParent(parent);
 		this.orb = Astrophysics
@@ -69,11 +70,11 @@ public class Ship extends SimObject {
 
 	public void addManeuver(Maneuver m) {
 		m.setShip(this);
-		plan.addManeuver(m);
+		maneuvers.add(m);
 	}
 
-	public FlightPlan getPlan() {
-		return plan;
+	public ArrayList<Maneuver> getManeuvers() {
+		return maneuvers;
 	}
 
 	/**

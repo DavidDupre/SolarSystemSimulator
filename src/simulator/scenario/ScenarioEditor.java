@@ -24,7 +24,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import simulator.astro.Time;
-import simulator.plans.FlightPlan;
 import simulator.plans.Maneuver;
 import simulator.scenario.source.Source;
 import simulator.simObject.Body;
@@ -320,13 +319,14 @@ public class ScenarioEditor {
 	 * 
 	 * @param plan
 	 */
-	public void addPlan(FlightPlan plan) {
-		if (!plan.getManeuvers().isEmpty()) {
-			Element e = getPlanElement(plan.ship.name);
+	public void addPlan(ArrayList<Maneuver> mans) {
+		if (!mans.isEmpty()) {
+			Maneuver root = mans.get(0);
+			Element e = getPlanElement(root.getShip().name);
 			if (e == null) {
 				// New element
 				e = doc.createElement("plan");
-				e.setAttribute("name", plan.ship.name);
+				e.setAttribute("name", root.getShip().name);
 				doc.getDocumentElement().appendChild(e);
 			} else {
 				// Overwrite element
@@ -340,7 +340,7 @@ public class ScenarioEditor {
 					e.removeChild(toRemove[i]);
 				}
 			}
-			for (Maneuver m : plan.getManeuvers()) {
+			for (Maneuver m : mans) {
 				Element command = doc.createElement("command");
 				command.setAttribute("type", m.getClass().getSimpleName());
 				for (String key : m.inputs.keySet()) {

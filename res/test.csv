@@ -1,4 +1,0 @@
-ID,Name,Parent,Mass (kg),Radius (m),Semi-Major Axis,Eccentricity,Inclination,Longitude of Ascending Node,Arg of Peri,True anomaly,Epoch (JD)
-0,Sun,-1,1.99E+30,696300000,0,0,0,0,0,0,2457000.5
-1,Earth,0,5.97E+24,6378100,1.50E+11,0.0167,0,348.73936,114.21,332.8465,2457000.5
-2,Moon,1,7.34E+22,1738100,38440000,0.0549,80,234,50,310,2457000.5

@@ -1,5 +1,7 @@
 package simulator.plans;
 
+import com.pi.math.vector.Vector;
+
 import simulator.simObject.Ship;
 
 public class Burn implements SimEvent {
@@ -15,12 +17,21 @@ public class Burn implements SimEvent {
 	}
 	
 	public void execute() {
-		command.run();
-		isFinished = true;
+		if(!isFinished) {
+			maneuver.ship.vel.add(command.getDeltaV());
+			isFinished = true;
+		}
+	}
+	
+	public void reverse() {
+		if(isFinished) {
+			maneuver.ship.vel.subtract(command.getDeltaV());
+			isFinished = false;
+		}
 	}
 	
 	public interface Command {
-		public void run();
+		public Vector getDeltaV();
 	}
 	
 	public double getEpoch() {
@@ -33,5 +44,15 @@ public class Burn implements SimEvent {
 	
 	public boolean isLast() {
 		return maneuver.burns.indexOf(this) == maneuver.burns.size() - 1;
+	}
+	
+	@Override
+	public boolean isFinished() {
+		return isFinished;
+	}
+	
+	@Override
+	public void setFinished(boolean finished) {
+		isFinished = finished;
 	}
 }

@@ -15,7 +15,6 @@ import com.pi.math.vector.VectorND;
 
 public class Incline extends Maneuver {
 	private double i_final;
-	private double i_initial;
 
 	/**
 	 * Change the inclination at the next orbit node. Currently only works at
@@ -41,6 +40,8 @@ public class Incline extends Maneuver {
 	}
 
 	public void init() {
+		// TODO Doesn't work when 2+ other maneuvers come before it
+		
 		/* Get current orbit */
 		Orbit orb = Astrophysics.toOrbitalElements(ship.pos, ship.vel,
 				ship.parent.mu);

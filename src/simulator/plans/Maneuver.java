@@ -23,7 +23,20 @@ public abstract class Maneuver {
 		return burns.get(0).epoch;
 	}
 	
+	public double getEndEpoch() {
+		return burns.get(burns.size()-1).epoch;
+	}
+	
 	public abstract void init();
+	
+	public void reInit() {
+		burns.clear();
+		init();
+	}
+	
+	public int getIndex() {
+		return getShip().getManeuvers().indexOf(this);
+	}
 	
 	public boolean isFinished() {
 		for(Burn b : burns) {

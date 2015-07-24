@@ -11,6 +11,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
 import simulator.Simulation;
+import simulator.plans.maneuvers.Hohmann;
+import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 
 import com.pi.math.vector.Vector;
@@ -99,6 +101,9 @@ public class InputThread {
 					break;
 				case Keyboard.KEY_PERIOD:
 					sim.simSpeed *= 2.0;
+					break;
+				case Keyboard.KEY_SPACE:
+					sim.solarSystem.removeManeuver((Ship) sim.solarSystem.getObject("test2"), 0); 
 					break;
 				}
 			}

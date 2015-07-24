@@ -42,6 +42,10 @@ public class Burn implements SimEvent {
 		return maneuver.getShip();
 	}
 	
+	public boolean isFirst() {
+		return maneuver.burns.indexOf(this) == 0;
+	}
+	
 	public boolean isLast() {
 		return maneuver.burns.indexOf(this) == maneuver.burns.size() - 1;
 	}

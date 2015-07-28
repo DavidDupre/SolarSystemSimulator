@@ -1,8 +1,9 @@
 package simulator.plans;
 
-import com.pi.math.vector.Vector;
-
+import simulator.plans.maneuvers.Maneuver;
 import simulator.simObject.Ship;
+
+import com.pi.math.vector.Vector;
 
 public class Burn implements SimEvent {
 	private Command command;
@@ -58,5 +59,9 @@ public class Burn implements SimEvent {
 	@Override
 	public void setFinished(boolean finished) {
 		isFinished = finished;
+	}
+	
+	public String toString() {
+		return this.getClass().getSimpleName();
 	}
 }

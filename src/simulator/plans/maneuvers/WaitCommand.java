@@ -8,7 +8,6 @@ import com.pi.math.vector.VectorND;
 
 import simulator.Simulation;
 import simulator.plans.Burn;
-import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 
 public class WaitCommand extends Maneuver {

@@ -29,6 +29,7 @@ public class Simulation {
 
 	public String rootFilePath;
 	public double simSpeed;
+	private double unPausedSpeed = 1;
 
 	public Simulation() {
 		try {
@@ -93,6 +94,19 @@ public class Simulation {
 	
 	public SimObject getFocus() {
 		return focus;
+	}
+	
+	public void setPaused(boolean pause) {
+		if(pause) {
+			unPausedSpeed = simSpeed;
+			simSpeed = 0;
+		} else {
+			simSpeed = unPausedSpeed;
+		}
+	}
+	
+	public boolean isPaused() {
+		return simSpeed == 0;
 	}
 
 	/**

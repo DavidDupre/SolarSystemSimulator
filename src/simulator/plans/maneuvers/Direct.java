@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import simulator.Simulation;
 import simulator.plans.Burn;
-import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 
 import com.pi.math.vector.Vector;

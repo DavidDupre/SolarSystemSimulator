@@ -220,6 +220,8 @@ public class Astrophysics {
 	 * Propagate the orbit. From page 101 of Fundamentals of Astrodynamics and
 	 * Applications
 	 * 
+	 * TODO check up on this method
+	 * 
 	 * @param r_0
 	 *            Initial (relative) position
 	 * @param v_0

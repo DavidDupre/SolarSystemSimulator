@@ -9,6 +9,7 @@ import simulator.plans.maneuvers.Bielliptic;
 import simulator.plans.maneuvers.Direct;
 import simulator.plans.maneuvers.Hohmann;
 import simulator.plans.maneuvers.Incline;
+import simulator.plans.maneuvers.Maneuver;
 import simulator.plans.maneuvers.OneTangent;
 import simulator.plans.maneuvers.Target;
 import simulator.plans.maneuvers.WaitCommand;

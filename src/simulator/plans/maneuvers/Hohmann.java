@@ -7,7 +7,6 @@ import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
 import simulator.plans.Burn;
-import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 
 import com.pi.math.vector.Vector;

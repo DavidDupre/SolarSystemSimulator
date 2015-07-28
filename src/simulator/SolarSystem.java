@@ -7,9 +7,9 @@ import java.util.List;
 import simulator.astro.Astrophysics;
 import simulator.astro.Time;
 import simulator.plans.Burn;
-import simulator.plans.Maneuver;
 import simulator.plans.SOIChange;
 import simulator.plans.SimEvent;
+import simulator.plans.maneuvers.Maneuver;
 import simulator.screen.Renderer;
 import simulator.simObject.Body;
 import simulator.simObject.Ship;
@@ -18,6 +18,8 @@ import simulator.simObject.SimObject.RenderDetail;
 
 /**
  * Manages the rendering and updating of simObjects
+ * 
+ * TODO SOIChanges not buffering on inserted maneuvers
  * 
  * @author S-2482153
  *
@@ -35,9 +37,11 @@ public class SolarSystem extends Thread {
 	private ArrayList<SimEvent> events;
 	private EventComparator eComp;
 	private ReverseEventComparator eCompRev;
-	
+
 	private ArrayList<ThreadRequest> requestQueue;
-	
+
+	private ArrayList<SOIChangeListener> listeners;
+
 	public SolarSystem(Simulation sim) {
 		renderer = new SolarSystemRenderer();
 		objects = new ArrayList<SimObject>();
@@ -45,10 +49,10 @@ public class SolarSystem extends Thread {
 		events = new ArrayList<SimEvent>();
 		eComp = new EventComparator();
 		eCompRev = new ReverseEventComparator();
-		
 		requestQueue = new ArrayList<ThreadRequest>();
+		listeners = new ArrayList<SOIChangeListener>();
 	}
-	
+
 	@Override
 	public void run() {
 		lastTime = System.currentTimeMillis();
@@ -59,11 +63,11 @@ public class SolarSystem extends Thread {
 		bufferEvents();
 		updateTo(simStartTimeTAI);
 
-//		System.out.println("\nstarting live sim");
+		// System.out.println("\nstarting live sim");
 
 		displayLiveSimulation();
 	}
-	
+
 	public void updateTo(double epoch) {
 		// TODO This method of looking for events seems wasteful
 		ArrayList<SimEvent> forwardEvents = new ArrayList<SimEvent>();
@@ -82,29 +86,34 @@ public class SolarSystem extends Thread {
 				o.updateTo(e.getEpoch());
 			}
 			e.execute();
-
-//			if (e instanceof Burn) {
-//				System.out.println("execute " + ((Burn) e).maneuver.getIndex() + " -- " + e.toString());
-//			} else {
-//				System.out.println("execute " + e.toString());
-//			}
+			if (e instanceof SOIChange) {
+				fireSOIChange((SOIChange) e);
+			}
 		}
 		for (SimEvent e : reverseEvents) {
 			for (SimObject o : objects) {
 				o.updateTo(e.getEpoch());
 			}
 			e.reverse();
-
-//			if (e instanceof Burn) {
-//				System.out.println("reverse " + ((Burn) e).maneuver.getIndex() + " -- " + e.toString());
-//			} else {
-//				System.out.println("reverse " + e.toString());
-//			}
 		}
 
 		for (SimObject o : objects) {
 			o.updateTo(epoch);
 		}
+	}
+	
+	public void fireSOIChange(SOIChange e) {
+		for (SOIChangeListener s : listeners) {
+			s.soiChange(e);
+		}
+	}
+
+	public void addNewSOIChangeListener(SOIChangeListener s) {
+		listeners.add(s);
+	}
+
+	public interface SOIChangeListener {
+		public void soiChange(SOIChange e);
 	}
 
 	private void updateEpoch() {
@@ -141,14 +150,28 @@ public class SolarSystem extends Thread {
 		// Cycle through events
 		while (!events.isEmpty()) {
 			SimEvent e = events.get(0);
+			
 			for (SimObject o : objects) {
 				o.updateTo(e.getEpoch());
 			}
+			
+			// shitty logging
+//			if (e instanceof Burn) {
+//				Burn b = (Burn) e;
+//				String name = b.maneuver.getClass().getSimpleName();
+//				System.out.println(name);
+//			} else {
+//				SOIChange c = (SOIChange) e;
+//				System.out
+//						.println(c.getShip().name + " escaping to "
+//								+ c.getParent().name + " from "
+//								+ c.getShip().parent.name);
+//			}
 
 			e.execute();
 			events.remove(e);
 			deadEvents.add(e);
-
+			
 			checkForSOIChanges(e.getShip());
 
 			if (e instanceof Burn) {
@@ -172,7 +195,7 @@ public class SolarSystem extends Thread {
 		// Resurrect the events for use in the live simulation
 		events = deadEvents;
 	}
-	
+
 	/**
 	 * Must be called after each burn or SOI change
 	 */
@@ -201,11 +224,11 @@ public class SolarSystem extends Thread {
 
 	private void displayLiveSimulation() {
 		while (true) {
-			for(ThreadRequest r: requestQueue) {
+			for (ThreadRequest r : requestQueue) {
 				r.fulfill();
 			}
 			requestQueue.clear();
-			
+
 			updateEpoch();
 			updateTo(epochTAI);
 		}
@@ -218,7 +241,7 @@ public class SolarSystem extends Thread {
 	 * @param m
 	 */
 	public void addManeuver(final Maneuver m) {
-		if(Thread.currentThread().equals(thread)) {
+		if (Thread.currentThread().equals(thread)) {
 			Ship s = m.getShip();
 			double lastEpoch = 0;
 			if (s.getManeuvers().isEmpty()) {
@@ -243,6 +266,7 @@ public class SolarSystem extends Thread {
 			System.out.println("updating to epochTAI");
 			updateTo(epochTAI);
 		} else {
+			// TODO ConcurrentModification on the requestQueue :(
 			requestQueue.add(new ThreadRequest() {
 				@Override
 				public void fulfill() {
@@ -256,13 +280,13 @@ public class SolarSystem extends Thread {
 		m.setShip(s);
 		addManeuver(m);
 	}
-	
+
 	private interface ThreadRequest {
 		public void fulfill();
 	}
 
 	public void insertManeuver(final Maneuver m, final int index) {
-		if(Thread.currentThread().equals(thread)) {
+		if (Thread.currentThread().equals(thread)) {
 			Ship s = m.getShip();
 			List<Maneuver> master = s.getManeuvers();
 			List<Maneuver> before = new ArrayList<Maneuver>();
@@ -277,17 +301,17 @@ public class SolarSystem extends Thread {
 			master.addAll(before);
 			master.add(m);
 			master.addAll(after);
-	
+
 			double preEpoch = 0;
 			if (index > 0) {
 				preEpoch = master.get(index - 1).getEndEpoch();
 			} else {
 				preEpoch = simStartTimeTAI;
 			}
-	
-	//		System.out.println("updating to preEpoch");
+
+			// System.out.println("updating to preEpoch");
 			updateTo(preEpoch);
-	
+
 			// Remove stale SOIChanges
 			for (SimEvent e : events) {
 				if (e instanceof SOIChange && e.getShip().equals(s)
@@ -295,35 +319,35 @@ public class SolarSystem extends Thread {
 					events.remove(e);
 				}
 			}
-	
+
 			m.init();
 			events.addAll(m.burns);
-	
+
 			// Remove stale burns
 			for (Maneuver a : after) {
 				events.removeAll(a.burns);
 			}
-	
+
 			// Add a sketchy offset so the events will still occur in sequence
 			double sketchOffset = 1E-5;
-			
-	//		System.out.println("updating to new event");
+
+			// System.out.println("updating to new event");
 			updateTo(m.getEndEpoch() + sketchOffset);
-	
+
 			// Re-initialize stale burns
 			for (Maneuver a : after) {
-	//			System.out.println("re-init " + a.getIndex());
+				// System.out.println("re-init " + a.getIndex());
 				a.reInit();
 				events.addAll(a.burns);
 				events.sort(eComp);
 				for (Burn b : a.burns) {
-	//				System.out.println("updating to stale burn");
+					// System.out.println("updating to stale burn");
 					updateTo(b.getEpoch() + sketchOffset);
 					checkForSOIChanges(s);
 				}
 			}
-	
-	//		System.out.println("updating to current");
+
+			// System.out.println("updating to current");
 			updateTo(epochTAI);
 		} else {
 			requestQueue.add(new ThreadRequest() {
@@ -339,30 +363,30 @@ public class SolarSystem extends Thread {
 		m.setShip(s);
 		insertManeuver(m, index);
 	}
-	
+
 	public void removeManeuver(final Ship s, final int index) {
-		if(Thread.currentThread().equals(thread)) {
+		if (Thread.currentThread().equals(thread)) {
 			Maneuver m = s.getManeuvers().get(index);
-			
+
 			List<Maneuver> after = new ArrayList<Maneuver>();
-			for (int i = index+1; i < s.getManeuvers().size(); i++) {
+			for (int i = index + 1; i < s.getManeuvers().size(); i++) {
 				after.add(s.getManeuvers().get(i));
 			}
 			s.getManeuvers().remove(m);
-	
+
 			double preEpoch = 0;
 			if (index > 0) {
 				preEpoch = s.getManeuvers().get(index - 1).getEndEpoch();
 			} else {
 				preEpoch = simStartTimeTAI;
 			}
-	
-	//		System.out.println("updating to preEpoch");
+
+			// System.out.println("updating to preEpoch");
 			updateTo(preEpoch);
-			
+
 			// Remove removed maneuver
 			events.removeAll(m.burns);
-	
+
 			// Remove stale SOIChanges
 			for (SimEvent e : events) {
 				if (e instanceof SOIChange && e.getShip().equals(s)
@@ -370,29 +394,29 @@ public class SolarSystem extends Thread {
 					events.remove(e);
 				}
 			}
-			
+
 			// Remove stale burns
 			for (Maneuver a : after) {
 				events.removeAll(a.burns);
 			}
-			
+
 			// Add a sketchy offset so the events will still occur in sequence
 			double sketchOffset = 1E-5;
-			
+
 			// Re-initialize stale burns
 			for (Maneuver a : after) {
-	//			System.out.println("re-init " + a.getIndex());
+				// System.out.println("re-init " + a.getIndex());
 				a.reInit();
 				events.addAll(a.burns);
 				events.sort(eComp);
 				for (Burn b : a.burns) {
-	//				System.out.println("updating to stale burn");
+					// System.out.println("updating to stale burn");
 					updateTo(b.getEpoch() + sketchOffset);
 					checkForSOIChanges(s);
 				}
 			}
-	
-	//		System.out.println("updating to current");
+
+			// System.out.println("updating to current");
 			updateTo(epochTAI);
 		} else {
 			requestQueue.add(new ThreadRequest() {
@@ -523,6 +547,16 @@ public class SolarSystem extends Thread {
 
 	public ArrayList<SimObject> getObjects() {
 		return objects;
+	}
+
+	public ArrayList<Ship> getShips() {
+		ArrayList<Ship> ships = new ArrayList<Ship>();
+		for (SimObject o : objects) {
+			if (o instanceof Ship) {
+				ships.add((Ship) o);
+			}
+		}
+		return ships;
 	}
 
 	public Renderer getRenderer() {

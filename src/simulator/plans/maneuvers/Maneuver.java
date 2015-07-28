@@ -1,13 +1,14 @@
-package simulator.plans;
+package simulator.plans.maneuvers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import simulator.plans.Burn;
 import simulator.simObject.Ship;
 
 public abstract class Maneuver {	
 	public ArrayList<Burn> burns;
-	protected Ship ship;
+	public Ship ship;
 	public double deltaV;
 	public HashMap<String, String> inputs;
 	
@@ -45,5 +46,9 @@ public abstract class Maneuver {
 			}
 		}
 		return burns.size() > 0;
+	}
+	
+	public String toString() {
+		return this.getClass().getSimpleName();
 	}
 }

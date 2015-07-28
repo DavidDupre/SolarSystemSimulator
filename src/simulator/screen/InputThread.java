@@ -11,8 +11,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
 import simulator.Simulation;
-import simulator.plans.maneuvers.Hohmann;
-import simulator.simObject.Ship;
 import simulator.simObject.SimObject;
 
 import com.pi.math.vector.Vector;
@@ -25,6 +23,8 @@ public class InputThread {
 	private FloatBuffer model;
 	private FloatBuffer projection;
 	private IntBuffer viewport;
+	
+	private static final float SENSITIVITY = 4f;
 	
 	/*
 	 * Within this many pixels = valid selection
@@ -59,8 +59,30 @@ public class InputThread {
 
 		double zoom = Mouse.getDWheel() * (Math.abs(cam.centerDistance) / 1000);
 		cam.centerDistance -= zoom;
+		
+		if(Keyboard.isKeyDown(Keyboard.KEY_W)) {
+			cam.pitch -= SENSITIVITY;
+		} else if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
+			cam.pitch += SENSITIVITY;
+		}
+		if(Keyboard.isKeyDown(Keyboard.KEY_A)) {
+			cam.yaw += SENSITIVITY;
+		} else if (Keyboard.isKeyDown(Keyboard.KEY_D)) {
+			cam.yaw -= SENSITIVITY;
+		}
+		if(Keyboard.isKeyDown(Keyboard.KEY_EQUALS)) {
+			cam.centerDistance -= SENSITIVITY * (Math.abs(cam.centerDistance) / 50);
+		} else if(Keyboard.isKeyDown(Keyboard.KEY_MINUS)) {
+			cam.centerDistance += SENSITIVITY * (Math.abs(cam.centerDistance) / 50);
+		}
+		
 		if (cam.centerDistance < 1) {
 			cam.centerDistance = 1;
+		}
+		if(cam.pitch < -180) {
+			cam.pitch = -180;
+		} else if (cam.pitch > 0) {
+			cam.pitch = 0;
 		}
 
 		while (Mouse.next()) {
@@ -103,7 +125,7 @@ public class InputThread {
 					sim.simSpeed *= 2.0;
 					break;
 				case Keyboard.KEY_SPACE:
-					sim.solarSystem.removeManeuver((Ship) sim.solarSystem.getObject("test2"), 0); 
+					sim.setPaused(!sim.isPaused());
 					break;
 				}
 			}

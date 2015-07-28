@@ -122,6 +122,7 @@ public abstract class SimObject {
 			if (parent != null) {
 				Vector absPos = getAbsolutePos();
 				Vector absVel = getAbsoluteVel();
+				
 				parent.getChildren().remove(this);
 				pos = absPos.subtract(b.getAbsolutePos());
 				vel = absVel.subtract(b.getAbsoluteVel());
@@ -154,7 +155,7 @@ public abstract class SimObject {
 	}
 
 	private void updateOrbitBuffer() {
-		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
+		orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
 		Conic c = new Conic(orb);
 		if (orb.e < 1.0) {
 			double currentAnomaly = Astrophysics.vToAnomaly(orb.e, orb.v);
@@ -181,6 +182,13 @@ public abstract class SimObject {
 			}
 		}
 		orbitBuffer.flip();
+	}
+	
+	public Orbit getOrbit() {
+		if(renderDetail.ordinal() <= RenderDetail.LOW.ordinal()) {
+			orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
+		}
+		return orb;
 	}
 
 	/**
@@ -254,5 +262,9 @@ public abstract class SimObject {
 		}
 
 		return family;
+	}
+	
+	public String toString() {
+		return name;
 	}
 }

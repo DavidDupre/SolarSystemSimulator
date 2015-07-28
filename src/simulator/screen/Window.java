@@ -7,6 +7,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 
 import simulator.Simulation;
+import simulator.screen.gui.GUI;
 import simulator.simObject.SimObject;
 
 public class Window {
@@ -29,7 +30,7 @@ public class Window {
 		
 		input = new InputThread(sim, camera);
 		
-		gui = new GUI(this, width, height);
+		gui = new GUI(sim, this, width, height);
 	}
 
 	public void setRenderer(Renderer renderer) {
@@ -70,6 +71,8 @@ public class Window {
 				renderer.update();
 				focus.superLock(false);
 			}
+			
+			gui.setFocus(sim.getFocus());
 			
 			input.pollInput();
 			

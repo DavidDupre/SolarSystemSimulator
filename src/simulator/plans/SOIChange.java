@@ -16,6 +16,10 @@ public class SOIChange implements SimEvent {
 		this.epoch = epoch;
 	}
 	
+	public Body getParent() {
+		return newParent;
+	}
+	
 	@Override
 	public double getEpoch() {
 		return epoch;
@@ -24,7 +28,6 @@ public class SOIChange implements SimEvent {
 	@Override
 	public void execute() {
 		if(!isFinished) {
-			System.out.println(ship.name + " left " + ship.parent.name + " to " + newParent.name);
 			oldParent = ship.parent;
 			ship.setParent(newParent);
 			isFinished = true;

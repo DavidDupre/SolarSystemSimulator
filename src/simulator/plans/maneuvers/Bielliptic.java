@@ -6,7 +6,6 @@ import com.pi.math.vector.Vector;
 import com.pi.math.vector.VectorND;
 
 import simulator.plans.Burn;
-import simulator.plans.Maneuver;
 import simulator.plans.Burn.Command;
 
 public class Bielliptic extends Maneuver {

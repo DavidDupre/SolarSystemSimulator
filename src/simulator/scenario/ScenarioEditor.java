@@ -24,7 +24,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import simulator.astro.Time;
-import simulator.plans.Maneuver;
+import simulator.plans.maneuvers.Maneuver;
 import simulator.scenario.source.Source;
 import simulator.simObject.Body;
 import simulator.simObject.Ship;

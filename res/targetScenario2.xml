@@ -15,8 +15,5 @@
 			<param target="test1"></param>
 			<param delay="one_orbit"></param>
 		</command>
-		<command type="Hohmann">
-			<param r="2E7"></param>
-		</command>
 	</plan>
 </scenerio>

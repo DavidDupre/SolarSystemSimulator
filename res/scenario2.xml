@@ -11,8 +11,5 @@
 		<command type="Hohmann">
 			<param r="3E7"></param>
 		</command>
-		<command type="Incline">
-			<param i="89"></param>
-		</command>
 	</plan>
 </scenerio>

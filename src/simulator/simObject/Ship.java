@@ -6,7 +6,7 @@ import simulator.Simulation;
 import simulator.astro.Astrophysics;
 import simulator.astro.Orbit;
 import simulator.astro.Time;
-import simulator.plans.Maneuver;
+import simulator.plans.maneuvers.Maneuver;
 import simulator.tle.TLE;
 
 import com.pi.math.vector.Vector;
@@ -85,9 +85,8 @@ public class Ship extends SimObject {
 	 */
 	public boolean isEscapingSOI() {
 		Orbit orb = Astrophysics.toOrbitalElements(pos, vel, parent.mu);
-		if (orb.v > Math.PI) {
-			return false;
-		}
+//		System.out.println("e: " + orb.e);
+//		System.out.println("v: " + orb.v);
 		if (orb.e > 1) {
 			return true;
 		} else {
